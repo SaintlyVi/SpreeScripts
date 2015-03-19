@@ -26,7 +26,7 @@ from datetime import date, timedelta
 import gspread
 from openpyxl.reader.excel import load_workbook
 from dateutil.parser import parse
-import Email, SQL
+import MyFunx
 #from pandas import ExcelWriter
 
 today = date.today()
@@ -100,7 +100,7 @@ Damagd.columns = ['SKU', 'Qty Damaged']
 #table = "vw_ProcurementPipeline"
 #dateparse = "ActualGoLiveDate"
 
-Lulu =  SQL.sql_import("vw_ProcurementPipeline","ActualGoLiveDate")
+Lulu =  MyFunx.sql_import("vw_ProcurementPipeline","ActualGoLiveDate")
 Planned = Lulu[['PlannedGoLiveDayOfWeek','PlannedGoLiveMonth','PlannedGoLiveYear','BuyerPlanName','BuyerPlanStatus','EmployeeFirstName','PlannedUnitCostExclTax','PlannedTotalQuantity','PlannedTotalCostExclTax','SimpleSKU','SimpleName','ConfigName','ConfigSKU','ProcurementStatus','ProcurementProductCategoryL3','ActualGoLiveDate','Supplier','Designer','EANNumber','BarCode']]
 #Merge EAN, BarCode information with SKU
 SKU = Planned['EANNumber'].combine_first(Planned['SimpleSKU'])
@@ -117,7 +117,7 @@ Planned = Planned[Planned['TotalCost'] > 0]
 #table = "vw_WarehouseInboundItemsReceived"
 #dateparse = "Timestamp"
 
-IBOI1003 =  SQL.sql_import("vw_WarehouseInboundItemsReceived","Timestamp")
+IBOI1003 =  MyFunx.sql_import("vw_WarehouseInboundItemsReceived","Timestamp")
 IBOI1003 = IBOI1003[['MessageReference','ItemCode','QuantityReceived','Timestamp']]
 TaknIn = IBOI1003.groupby(['MessageReference','ItemCode']).agg({'QuantityReceived':np.sum, 'Timestamp':np.max})
 TaknIn.reset_index(inplace=True)
@@ -129,7 +129,7 @@ TaknIn = TaknIn[TaknIn['POs'] != 0]
 #table = "vw_WarehouseStockAvailability"
 #dateparse = "Timestamp"
 
-ITMI1002 =  SQL.sql_import("vw_WarehouseStockAvailability","Timestamp")
+ITMI1002 =  MyFunx.sql_import("vw_WarehouseStockAvailability","Timestamp")
 ITMI1002 = ITMI1002[['ITEM_CODE','QTY']]
 PutAway = pd.pivot_table(ITMI1002, values = ['QTY'], index = ['ITEM_CODE'], aggfunc=np.sum)
 PutAway.reset_index(inplace=True)
@@ -197,7 +197,7 @@ part = 'Visibility ' + str(today) + '.xlsx'
 message = 'Visibility Report' + str(today)
 maillist = "MerchMailList.txt"
 
-Email.send_message(doc_name, message, part, maillist)
+MyFunx.send_message(doc_name, message, part, maillist)
 
 #==============================================================================
 # Generate WHTrack Output Data
@@ -236,7 +236,7 @@ part = 'WHTrack ' + str(today) + '.xlsx'
 message = 'Spree Stock Tracking on ' + str(today)
 maillist = "WHMailList.txt"
 
-Email.send_message(doc_name, message, part, maillist)
+MyFunx.send_message(doc_name, message, part, maillist)
 
 #==============================================================================
 # Generate ProductTrack QuickStats
@@ -331,7 +331,7 @@ message = 'Where is my stock? Quick Stats to monitor production progress'
 maillist = "QSMailList.txt"
 
 #if today.weekday() == 4:
-Email.send_message(doc_name, message, part, maillist)
+MyFunx.send_message(doc_name, message, part, maillist)
 
 #==============================================================================
 # Generate Supplier Compliance

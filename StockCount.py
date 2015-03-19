@@ -16,9 +16,7 @@ from pandas import DataFrame
 from datetime import date, datetime
 import gspread
 from pandas import ExcelWriter
-import pyodbc
-import pandas.io.sql as psql
-import Email, Totalxlsx
+import MyFunx
 
 team = raw_input('What is your Team Letter (A, B, C, S (S = SAMPLES))? ')
 shift = datetime.today().strftime('%Y-%m-%d %H:%M')
@@ -31,12 +29,8 @@ BP = pd.read_csv('Z:\\Python Scripts\\00_UPDATE\\BPdetail.csv', header = 0, usec
 #Planned = Lulu1.parse('Sheet4', skiprows = 0, index = None, parse_cols = (36,46))
 
 #Connect to MSSQL to get Lulu data
-connection_string1 = "DRIVER={SQL Server};SERVER=02CPT-TLSQL01;DATABASE=Spree SSBI;UID=SSBI_PaymentOps;PWD=Spr33Pops101;TABLE=vw_ProcurementPipeline"
-cnxn1 = pyodbc.connect(connection_string1)
-cursor1 = cnxn1.cursor()
-sql1 = "select * from vw_ProcurementPipeline"  
-df1 = psql.read_sql(sql1, cnxn1, parse_dates = ['ActualGoLiveDate'])
-Planned = df1[['SimpleSKU','ProcurementProductCategoryL3']]
+Lulu =  MyFunx.sql_import("vw_ProcurementPipeline","ActualGoLiveDate")
+Planned = Lulu[['SimpleSKU','ProcurementProductCategoryL3']]
 Planned.drop_duplicates(inplace = True, take_last = True)
 
 #Reading from StockCount google docs
@@ -133,7 +127,7 @@ else:
     wksht.set_column('L:L', 6)
     writer.save()
     
-    Totalxlsx.data_total( DocName, HistoryPath, SavePath )
+    MyFunx.data_total(DocName, HistoryPath, SavePath )
     
     #Deleting all data from google doc    
     clean = worksheet.range('A2:A' + str(l + 5))
@@ -141,5 +135,5 @@ else:
         cl.value = ""
     worksheet.update_cells(clean)
     
-    Email.send_message(doc_name, message, part, maillist)
+    MyFunx.send_message(doc_name, message, part, maillist)
     
