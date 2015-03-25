@@ -195,7 +195,7 @@ writer1.save()
 doc_name = 'Visibility Report '
 part = 'Visibility ' + str(today) + '.xlsx'
 message = 'Visibility Report' + str(today)
-maillist = "MerchMailList.txt"
+maillist = "MailList_Merch.txt"
 
 MyFunx.send_message(doc_name, message, part, maillist)
 
@@ -234,7 +234,7 @@ writer2.save()
 doc_name = 'WH Stock Track Report '
 part = 'WHTrack ' + str(today) + '.xlsx'
 message = 'Spree Stock Tracking on ' + str(today)
-maillist = "WHMailList.txt"
+maillist = "MailList_WH.txt"
 
 MyFunx.send_message(doc_name, message, part, maillist)
 
@@ -318,7 +318,7 @@ for row in cellsB:
         cell.style.number_format.format_code = '0%'
         cell.style.alignment.horizontal = 'center'
 
-cellsC = ws['B27':'F29']
+cellsC = ws['B27':'F30']
 for row in cellsC:
     for cell in row:
         cell.style.number_format.format_code = '"R "#,##0.00'
@@ -328,7 +328,7 @@ wb.save('ProductTrack QuickStats ' + str(today) + '.xlsx')
 doc_name = 'ProductTrack QuickStats '
 part = 'ProductTrack QuickStats ' + str(today) + '.xlsx'
 message = 'Where is my stock? Quick Stats to monitor production progress'
-maillist = "QSMailList.txt"
+maillist = "MailList_QS.txt"
 
 #if today.weekday() == 4:
 MyFunx.send_message(doc_name, message, part, maillist)
