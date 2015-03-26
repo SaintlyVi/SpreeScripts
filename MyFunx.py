@@ -10,7 +10,6 @@ A collection of functions to be applied in various Spree Scripts.
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from datetime import date
 from email import Encoders
 import pandas as pd
 import os
@@ -104,9 +103,7 @@ def sql_import(table, dateparse):
 def data_total( DocName, HistoryPath, SavePath ):
     
     files = os.listdir(HistoryPath)
-    df = DataFrame(data = files, columns = ['Files'])
-    #df = df[df['Files'].str.contains('~') == False]
-
+    
     TotalData = pd.DataFrame()
     
     for file in files:    

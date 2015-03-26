@@ -5,9 +5,6 @@ Created on Tue Feb 10 11:12:34 2015
 @author: Wiebke.Toussaint
 """
 
-import sys
-sys.path.append('Z:\\SUPPLY CHAIN\\Python Scripts\\00_SharedFunctions')
-
 import pandas as pd
 from pandas import DataFrame
 from datetime import date, datetime#, timedelta
@@ -15,7 +12,7 @@ import gspread
 from pandas import ExcelWriter
 import pyodbc
 import pandas.io.sql as psql
-import Email
+import MyFunx
 
 shift = datetime.today().strftime('%Y-%m-%d %H:%M')
 today = date.today() 
@@ -129,7 +126,7 @@ wksht.set_column('D:D', 16)
 wksht.set_column('E:J', 29)
 writer.save()
 
-Email.send_message(doc_name, message, part, maillist)  
+MyFunx.send_message(doc_name, message, part, maillist)  
     
 #Create SampleTrack Reference doc
     

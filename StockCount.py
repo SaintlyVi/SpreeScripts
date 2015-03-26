@@ -8,9 +8,6 @@ Created on Tue Nov 11 11:54:13 2014
 #This script collates all stock processed and counted by Spree QC teams. 
 #Script is run manually by scanning agents when they have filled one pallet
 
-import sys
-sys.path.append('Z:\\Python Scripts\\00_SharedFunctions')
-
 import pandas as pd
 from pandas import DataFrame
 from datetime import date, datetime
