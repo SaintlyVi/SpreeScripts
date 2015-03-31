@@ -280,8 +280,8 @@ BND = V[V['ND']==True].groupby(V['GLMonth']).sum()['TotalCost'] - (NoBP + NBND) 
 NQC = V[V['NQC']==True].groupby(V['GLMonth']).sum()['TotalCost'] - (NoBP + NBND + BND)  #Cost of SKUs not QCed
 NOTD = V[V['NOTD']==True].groupby(V['GLMonth']).sum()['TotalCost'] - (NoBP + NBND + BND + NQC)#Cost of SKUs not received by OTD
 
-idx = ['Not on Brightpearl', 'Not Booked Not Delivered', 'Booked Not Delivered', 'Not QCed', 'OTD Not Received']
-WorkingCapital = pd.DataFrame(data = [NoBP, NBND, BND, NQC, NOTD], index = idx).T
+idx = ['Not on Brightpearl', 'Not Booked Not Delivered', 'Booked Not Delivered', 'Not QCed']#, 'OTD Not Received']
+WorkingCapital = pd.DataFrame(data = [NoBP, NBND, BND, NQC], index = idx).T
 WorkingCapital.applymap(lambda x: "R{:.8n}".format(x))
 WorkingCapital.name = "Working Capital"
 

@@ -89,15 +89,15 @@ DayCount.to_excel(writer,'Sheet1', index = False)
 #Format excel doc
 workbook = writer.book
 wksht = writer.sheets['Sheet1']
-wksht.set_column('A:A', 22)
-wksht.set_column('B:B', 8)
-wksht.set_column('C:C', 18)
-wksht.set_column('D:D', 50)
+wksht.set_column('A:A', 8)
+wksht.set_column('B:B', 25)
+wksht.set_column('C:C', 12)
+wksht.set_column('D:D', 18)
 wksht.set_column('E:E', 35)
-wksht.set_column('F:F', 8)
+wksht.set_column('F:F', 20)
 wksht.set_column('G:G', 8)
-wksht.set_column('H:H', 25)
-wksht.set_column('I:I', 35)
+wksht.set_column('H:H', 8)
+wksht.set_column('I:J', 35)
 writer.save()
 
 #Deleting all data from google doc
