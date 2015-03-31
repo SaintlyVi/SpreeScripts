@@ -15,7 +15,7 @@ import pandas.io.sql as psql
 import MyFunx
 
 shift = datetime.today().strftime('%Y-%m-%d %H:%M')
-today = date.today() 
+today = date.today() - timedelta(1)
 
 #==============================================================================
 # Read Samples Plan master data
@@ -107,7 +107,7 @@ OutputName = 'SampleTrack ' + str(today)
 doc_name = 'Samples Tracker '
 part = OutputName + '.xlsx'
 message = 'Spree Samples Tracking ' + str(date.today())
-maillist = "MailList.txt" 
+maillist = "MailList_Samples.txt" 
      
 writer = ExcelWriter(part)
 SampleSummary.to_excel(writer,'EasyTrack')

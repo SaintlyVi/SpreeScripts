@@ -60,7 +60,7 @@ def send_message( doc_name, message, part, maillist ):
     print "Mail sent successfully"
        
        
-def data_history( DataName, DocName, DaysCounting, path ):
+def data_history( DataName, DocName, DaysCounting, path, sheet = 'Sheet1' ):
     # This function creates a rolling history summary of data and  writes it to a xlsx file.
     # INPUT PARAMETERS:
     # DataName = Name of DataFrame in script that is rolled up
@@ -72,11 +72,11 @@ def data_history( DataName, DocName, DaysCounting, path ):
     filename = os.path.join(path, filename)
     
     HistoryBook = pd.ExcelFile(filename)
-    HistorySheet = HistoryBook.parse('Sheet1', skiprows = 0, index = None)    
+    HistorySheet = HistoryBook.parse(sheet, skiprows = 0, index = None)    
     NewData = HistorySheet.append(DataName)
     AllDates = []
     for d in NewData['Date']:   
-        if d.date() < date.today() - timedelta(DaysCounting):
+        if d < date.today() - timedelta(DaysCounting):
             d = 0
         else:
             d = d
@@ -86,7 +86,7 @@ def data_history( DataName, DocName, DaysCounting, path ):
     NewData = NewData[NewData['Date']!= 0]
      
     writer = ExcelWriter(filename)
-    NewData.to_excel(writer, 'Sheet1', index = False )   
+    NewData.to_excel(writer, sheet, index = False )   
     writer.save()
 
 def sql_import(table, dateparse):
