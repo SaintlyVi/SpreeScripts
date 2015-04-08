@@ -6,9 +6,9 @@ Created on Tue Nov 11 11:54:13 2014
 @author: Wiebke.Toussaint
 """
 
-#This script takes bookings from Simplybook, looks them up against Brightpearl Detail Report
-#createst the next day's Receiving Report and emails it to buyers and warehouse. All suppliers' 
-#contact information is recorded in a 6 week rolling doc
+## This script takes bookings from Simplybook, createst the next day's Receiving Report and emails
+## it to buyers and warehouse. All suppliers' contact information is recorded in a 6 week rolling 
+## doc
 
 import pandas as pd
 from pandas import DataFrame, Series
@@ -47,7 +47,7 @@ m = df.join(x)
 #Create Supplier Contacts output files
 S = m[['Date','Event','POs','Supplier','Brand','Client name','Client email']]
 S = S[S['POs'] != ""]
-path = '03_Damages'
+path = '03_Damages_OS'
 DataName = S
 DocName = 'Supplier Contacts'
 DaysCounting = 70

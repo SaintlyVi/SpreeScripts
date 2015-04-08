@@ -10,26 +10,18 @@ from pandas import DataFrame
 from datetime import date, datetime#, timedelta
 import gspread
 from pandas import ExcelWriter
-import pyodbc
-import pandas.io.sql as psql
 import MyFunx
 
 shift = datetime.today().strftime('%Y-%m-%d %H:%M')
-today = date.today() - timedelta(1)
+today = date.today()
 
 #==============================================================================
 # Read Samples Plan master data
 #==============================================================================
 
-connection_string1 = "DRIVER={SQL Server};SERVER=02CPT-TLSQL01;DATABASE=Spree SSBI;UID=SSBI_PaymentOps;PWD=Spr33Pops101;TABLE=vw_ProcurementPipeline"
-cnxn1 = pyodbc.connect(connection_string1)
-cursor1 = cnxn1.cursor()
-sql1 = "select * from vw_ProcurementPipeline"  
-df1 = psql.read_sql(sql1, cnxn1, parse_dates = ['ActualGoLiveDate'])
-Planned = df1[['PlannedGoLiveDayOfWeek','PlannedGoLiveMonth','PlannedGoLiveYear','BuyerPlanName','BuyerPlanStatus','EmployeeFirstName','PlannedUnitCostExclTax','PlannedTotalQuantity','PlannedTotalCostExclTax','SimpleSKU','SimpleName','ConfigName','ConfigSKU','ProcurementStatus','ProcurementProductCategoryL3','ActualGoLiveDate','Supplier','Designer','EANNumber','BarCode']]
-
-#Lulu1 = pd.ExcelFile('Z:\\SUPPLY CHAIN\\Python Scripts\\00_UPDATE\\Lulu1.xlsx')
-#Planned = Lulu1.parse('Sheet4', skiprows = 0, index = None, parse_cols = (13,14,19,26,36,39,50,60))
+pw = raw_input("Enter SQL Server database password: ")
+Lulu =  MyFunx.sql_import("vw_ProcurementPipeline","ActualGoLiveDate", pw)
+Planned = Lulu[['PlannedGoLiveDayOfWeek','PlannedGoLiveMonth','PlannedGoLiveYear','BuyerPlanName','BuyerPlanStatus','EmployeeFirstName','PlannedUnitCostExclTax','PlannedTotalQuantity','PlannedTotalCostExclTax','SimpleSKU','SimpleName','ConfigName','ConfigSKU','ProcurementStatus','ProcurementProductCategoryL3','ActualGoLiveDate','Supplier','Designer','EANNumber','BarCode']]
 Planned.rename(columns = {'PlannedGoLiveDayOfWeek':'GLDay','PlannedGoLiveMonth':'GLMonth','PlannedGoLiveYear':'GLYear','EmployeeFirstName':'Buyer','SimpleSKU':'ProductID'}, inplace = True)
 Planned.drop_duplicates(subset = ['ProductID','GLMonth'], inplace = True, take_last = True)
 Planned = Planned[Planned['PlannedTotalCostExclTax'] > 0]
@@ -46,7 +38,7 @@ SamplesPlan = SamplesPlan[(SamplesPlan.GLMonth >= today.month - 2) & (SamplesPla
 # Read data from Google docs
 #==============================================================================
 #History Data
-data = pd.ExcelFile('Z:\\SUPPLY CHAIN\\Python Scripts\\06_Samples\\SampleTrack.xlsx')
+data = pd.ExcelFile('05_Samples\\SampleTrack.xlsx')
 SH = data.parse('Master', header = 0, skiprows = 0, parse_cols = 'C,M:R', parse_dates = True)
 SH.drop_duplicates(inplace = True)
 
@@ -93,19 +85,15 @@ for i in x:
     
 samples['ConfigSKU'] = samples.SKU.apply(lambda x : x[:7] if len(x)==11 else x)
 
-SamplesList = pd.read_csv('Z:\\SUPPLY CHAIN\\Python Scripts\\06_Samples\\SamplesList.csv', header = 0)
-
 AllSamples = pd.merge(SamplesPlan, samples, how = 'outer', on = 'ConfigSKU', sort  = False)
-AllSamples = pd.merge(AllSamples, SamplesList, how = 'outer', on = 'ConfigSKU', sort = False)
 AllSamples = AllSamples.sort(columns = ['01_WHSamples_OUT'], ascending = True, na_position = 'last')
-AllSamples = AllSamples[['Month','ConfigSKU','SKU','ConfigName','Supplier','Designer','Category','GLDay','GLMonth','GLYear', 'Buyer','Date QCed','01_WHSamples_OUT','02_SampleRoom_IN','03_SampleRoom_TO_studio','04_SampleRoom_FROM_studio','05_SampleRoom_OUT','06_WHSamples_IN']]
+AllSamples = AllSamples[['ConfigSKU','SKU','ConfigName','Supplier','Designer','Category','GLDay','GLMonth','GLYear', 'Buyer','Date QCed','01_WHSamples_OUT','02_SampleRoom_IN','03_SampleRoom_TO_studio','04_SampleRoom_FROM_studio','05_SampleRoom_OUT','06_WHSamples_IN']]
 
 SampleSummary = AllSamples.groupby(['GLYear','GLMonth']).agg({'Month':'count','Date QCed':'count','01_WHSamples_OUT':'count','02_SampleRoom_IN':'count','03_SampleRoom_TO_studio':'count','04_SampleRoom_FROM_studio':'count','05_SampleRoom_OUT':'count','06_WHSamples_IN':'count'})
 SampleSummary = SampleSummary[['Month','Date QCed','01_WHSamples_OUT','02_SampleRoom_IN','03_SampleRoom_TO_studio','04_SampleRoom_FROM_studio','05_SampleRoom_OUT','06_WHSamples_IN']]
 
-OutputName = 'SampleTrack ' + str(today)
 doc_name = 'Samples Tracker '
-part = OutputName + '.xlsx'
+part = '05_Samples\\SampleTrack ' + str(today) + '.xlsx'
 message = 'Spree Samples Tracking ' + str(date.today())
 maillist = "MailList_Samples.txt" 
      
@@ -130,8 +118,7 @@ MyFunx.send_message(doc_name, message, part, maillist)
     
 #Create SampleTrack Reference doc
     
-OutputName2 = 'SampleTrack'
-part2 = OutputName2 + '.xlsx'
+part2 = '05_Samples\\SampleTrack.xlsx'
      
 writer2 = ExcelWriter(part2)
 AllSamples.to_excel(writer2,'Master', index = False)

@@ -20,13 +20,14 @@ shift = datetime.today().strftime('%Y-%m-%d %H:%M')
 
 #Import Brightpearl Detail Report
 columns = ["Order ID", "Ref", "Status", "Contact", "SKU", "Name", "Quantity"]
-BP = pd.read_csv('Z:\\Python Scripts\\00_UPDATE\\BPdetail.csv', header = 0, usecols = columns)
+BP = pd.read_csv('BPdetail.csv', header = 0, usecols = columns)
     
 #Lulu1 = pd.ExcelFile('Z:\\Python Scripts\\00_UPDATE\\Lulu1.xlsx')
 #Planned = Lulu1.parse('Sheet4', skiprows = 0, index = None, parse_cols = (36,46))
 
 #Connect to MSSQL to get Lulu data
-Lulu =  MyFunx.sql_import("vw_ProcurementPipeline","ActualGoLiveDate")
+pw = "Spr33Pops101"
+Lulu =  MyFunx.sql_import("vw_ProcurementPipeline","ActualGoLiveDate",pw)
 Planned = Lulu[['SimpleSKU','ProcurementProductCategoryL3']]
 Planned.drop_duplicates(inplace = True, take_last = True)
 
@@ -43,13 +44,13 @@ if team == 'S':
        
     #Parameters for total samples count doc
     DocName = 'Samples Returned'
-    HistoryPath = 'Z:\\Stock Count\\All samples'
-    SavePath = 'Z:\\Python Scripts\\02_StockCount'
+    HistoryPath = 'Z:\\SUPPLY CHAIN\\Stock Count\\All samples'
+    SavePath = 'Z:\\SUPPLY CHAIN\\Python Scripts\\02_StockCount'
     
     #Email Parameters for Spree output file
     OutputName = ' Team ' + str(team) + ' ' + str(date.today()) + ' ' + str(datetime.today().hour) + 'h' + str(datetime.today().minute)
     doc_name = 'Samples Count ' + 'Team ' + str(team) + ' '
-    part = 'Samples Count '+ OutputName + '.xlsx'
+    part = '02_StockCount\\Samples Count '+ OutputName + '.xlsx'
     message = 'Spree Samples Count for shift ' + OutputName
     maillist = "MailList.txt"
     
@@ -64,11 +65,11 @@ else:
          
     #Parameters for total stock count doc
     DocName = 'Rolling Stock'
-    HistoryPath = 'Z:\\Stock Count\\All handovers'
-    SavePath = 'Z:\\Python Scripts\\02_StockCount'         
+    HistoryPath = 'Z:\\SUPPLY CHAIN\\Stock Count\\All handovers'
+    SavePath = 'Z:\\SUPPLY CHAIN\\Python Scripts\\02_StockCount'         
     
     #Email Parameters for Spree output file
-    OutputName = 'Stock Count Team ' + str(team) + ' ' + str(date.today()) + ' ' + str(datetime.today().hour) + 'h' + str(datetime.today().minute)     
+    OutputName = '02_StockCount\\Stock Count Team ' + str(team) + ' ' + str(date.today()) + ' ' + str(datetime.today().hour) + 'h' + str(datetime.today().minute)     
     doc_name = 'Spree Stock Count ' + 'Team ' + str(team) + ' '
     part = OutputName + '.xlsx'
     message = 'Spree Stock Count for shift ' + OutputName

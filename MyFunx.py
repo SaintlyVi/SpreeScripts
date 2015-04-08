@@ -14,7 +14,7 @@ from email import Encoders
 import pandas as pd
 import os
 from datetime import date, timedelta
-from pandas import ExcelWriter, DataFrame
+from pandas import ExcelWriter
 import pyodbc
 import pandas.io.sql as psql
 
@@ -74,26 +74,19 @@ def data_history( DataName, DocName, DaysCounting, path, sheet = 'Sheet1' ):
     HistoryBook = pd.ExcelFile(filename)
     HistorySheet = HistoryBook.parse(sheet, skiprows = 0, index = None)    
     NewData = HistorySheet.append(DataName)
-    AllDates = []
-    for d in NewData['Date']:   
-        if d < date.today() - timedelta(DaysCounting):
-            d = 0
-        else:
-            d = d
-        AllDates.append(d)
-    NewData['Date'] = AllDates
-                
-    NewData = NewData[NewData['Date']!= 0]
-     
+    period = date.today() - timedelta(days = DaysCounting)
+    NewData['Age'] = NewData.loc[:,'Date'] - period
+    NewData.reset_index(drop = True, level = 0, inplace = True)
+    NewData = NewData[NewData['Age'] >= 0]
+                 
     writer = ExcelWriter(filename)
     NewData.to_excel(writer, sheet, index = False )   
     writer.save()
 
-def sql_import(table, dateparse):
+def sql_import(table, dateparse, pw):
     # This function pulls data from SQL server    
     
-    pwd = raw_input("Enter database password: ")
-    connection_string = "DRIVER={SQL Server};SERVER=02CPT-TLSQL01;DATABASE=Spree SSBI;UID=SSBI_PaymentOps;PWD=" + pwd + ";TABLE=" + table
+    connection_string = "DRIVER={SQL Server};SERVER=02CPT-TLSQL01;DATABASE=Spree SSBI;UID=SSBI_PaymentOps;PWD=" + pw + ";TABLE=" + table
     cnxn = pyodbc.connect(connection_string)
     sql = "select * from " + table
     df = psql.read_sql(sql, cnxn, parse_dates = [dateparse])
@@ -117,7 +110,8 @@ def data_total( DocName, HistoryPath, SavePath ):
         except IOError:
             print "Cannot read " + str(historyfile)
     
-    TotalData.dropna(subset = ['ProductID'], inplace = True)    
+    TotalData.dropna(subset = ['ProductID'], inplace = True)
+    TotalData.drop_duplicates(inplace = True)    
     
     filename = DocName + '.xlsx'
     filename = os.path.join(SavePath, filename)    

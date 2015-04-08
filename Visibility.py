@@ -1,4 +1,4 @@
-f#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Created on Tue Dec 02 12:53:35 2014
@@ -16,18 +16,14 @@ Created on Tue Dec 02 12:53:35 2014
 # #5. Run Damages Script
 # #6. Run Stock Count Script
 #==============================================================================
-import sys
-sys.path.append('Z:\\SUPPLY CHAIN\\Python Scripts\\00_SharedFunctions')
 
 import numpy as np
 import pandas as pd
 from pandas import DataFrame, ExcelWriter
-from datetime import date, timedelta
+from datetime import date
 import gspread
 from openpyxl.reader.excel import load_workbook
-from dateutil.parser import parse
 import MyFunx
-#from pandas import ExcelWriter
 
 today = date.today()
 lastmonth = today.month - 2
@@ -38,7 +34,7 @@ nextmonth = today.month + 1
 #==============================================================================
 #Import Brightpearl Detail Report data
 columns = ["Order ID", "Ref", "SKU", "Status", "Quantity"]
-BPdetail = pd.read_csv('Z:\\SUPPLY CHAIN\\Python Scripts\\00_UPDATE\\BPdetail.csv', header = 0, usecols = columns)
+BPdetail = pd.read_csv('BPdetail.csv', header = 0, usecols = columns)
 BPdetail['Order ID'] = BPdetail['Order ID'].map(lambda x: str(x))
 BPdetail.rename(columns={'Order ID': 'POs', 'Quantity':'BP Qty'}, inplace=True)
 BPdet = BPdetail[BPdetail['Status'].str.contains('Cancel PO')==False] 
@@ -48,7 +44,7 @@ CancelledPOs = CancelledPOs.groupby('POs').agg({'SKU':'count'})
 
 #Import Brightpearl PO Report data
 columns = ["Order ID", "Delivery due"]
-BPreport = pd.read_csv('Z:\\SUPPLY CHAIN\\Python Scripts\\00_UPDATE\\BPreport.csv', header = 0, usecols = columns, parse_dates = [1])
+BPreport = pd.read_csv('BPreport.csv', header = 0, usecols = columns, parse_dates = [1])
 BPreport = BPreport.dropna(axis = 0,how = 'all') #removes empty rows
 BPreport['Order ID'] = BPreport['Order ID'].map(lambda x: x.strip('PO#')) #removes text in front of PO number
 BPreport.rename(columns={'Order ID': 'POs', 'Delivery due':'DeliveryDue'}, inplace=True)
@@ -89,18 +85,19 @@ QCed = QCed.groupby(['POs','SKU']).agg({'Qty Counted':np.sum, 'LastQCed':np.max}
 QCed.reset_index(inplace=True)
 
 #Import Rolling Damages
-Damages = pd.ExcelFile('Z:\\SUPPLY CHAIN\\Python Scripts\\03_Damages\\Rolling Damages.xlsx')
+Damages = pd.ExcelFile('03_Damages_OS\\Rolling Damages.xlsx')
 Damages = Damages.parse('Sheet1', skiprows = 0, index = None)
-SKU = Damages['SKU'].value_counts()
+SKU = Damages['ProductID'].value_counts()
 Damagd = DataFrame(data = SKU)
 Damagd.reset_index(level=0, inplace=True)
 Damagd.columns = ['SKU', 'Qty Damaged']
 
 #Import Lulu Assortment Plans
-#table = "vw_ProcurementPipeline"
-#dateparse = "ActualGoLiveDate"
+## table = "vw_ProcurementPipeline"
+## dateparse = "ActualGoLiveDate"
 
-Lulu =  MyFunx.sql_import("vw_ProcurementPipeline","ActualGoLiveDate")
+pw = raw_input("Enter SQL Server database password: ")
+Lulu =  MyFunx.sql_import("vw_ProcurementPipeline","ActualGoLiveDate",pw)
 Planned = Lulu[['PlannedGoLiveDayOfWeek','PlannedGoLiveMonth','PlannedGoLiveYear','BuyerPlanName','BuyerPlanStatus','EmployeeFirstName','PlannedUnitCostExclTax','PlannedTotalQuantity','PlannedTotalCostExclTax','SimpleSKU','SimpleName','ConfigName','ConfigSKU','ProcurementStatus','ProcurementProductCategoryL3','ActualGoLiveDate','Supplier','Designer','EANNumber','BarCode']]
 #Merge EAN, BarCode information with SKU
 SKU = Planned['EANNumber'].combine_first(Planned['SimpleSKU'])
@@ -112,12 +109,13 @@ else:
     Planned = Planned[((Planned.PlannedGoLiveMonth >= lastmonth) & (Planned.PlannedGoLiveYear == today.year)) & ((Planned.PlannedGoLiveMonth <= nextmonth) & (Planned.PlannedGoLiveYear == today.year))]
 Planned.rename(columns={'PlannedGoLiveDayOfWeek':'GLDay','PlannedGoLiveMonth':'GLMonth','PlannedGoLiveYear':'GLYear', 'EmployeeFirstName':'Buyer','ProcurementProductCategoryL3':'Category', 'PlannedUnitCostExclTax':'UnitCost','PlannedTotalQuantity':'TotalUnits','PlannedTotalCostExclTax':'TotalCost'}, inplace=True)
 Planned = Planned[Planned['TotalCost'] > 0]
+Planned = Planned[Planned['ProcurementStatus'] != 'Deleted']
 
 #Import Dynaman IBOI1003 Inbound Order Received Messages
-#table = "vw_WarehouseInboundItemsReceived"
-#dateparse = "Timestamp"
+## table = "vw_WarehouseInboundItemsReceived"
+## dateparse = "Timestamp"
 
-IBOI1003 =  MyFunx.sql_import("vw_WarehouseInboundItemsReceived","Timestamp")
+IBOI1003 =  MyFunx.sql_import("vw_WarehouseInboundItemsReceived","Timestamp",pw)
 IBOI1003 = IBOI1003[['MessageReference','ItemCode','QuantityReceived','Timestamp']]
 TaknIn = IBOI1003.groupby(['MessageReference','ItemCode']).agg({'QuantityReceived':np.sum, 'Timestamp':np.max})
 TaknIn.reset_index(inplace=True)
@@ -126,10 +124,10 @@ TaknIn['POs'] = TaknIn['POs'].apply(lambda x: x if len(x) < 7 else 0)
 TaknIn = TaknIn[TaknIn['POs'] != 0]
 
 #Import Dynaman ITMI1002 
-#table = "vw_WarehouseStockAvailability"
-#dateparse = "Timestamp"
+## table = "vw_WarehouseStockAvailability"
+## dateparse = "Timestamp"
 
-ITMI1002 =  MyFunx.sql_import("vw_WarehouseStockAvailability","Timestamp")
+ITMI1002 =  MyFunx.sql_import("vw_WarehouseStockAvailability","Timestamp",pw)
 ITMI1002 = ITMI1002[['ITEM_CODE','QTY']]
 PutAway = pd.pivot_table(ITMI1002, values = ['QTY'], index = ['ITEM_CODE'], aggfunc=np.sum)
 PutAway.reset_index(inplace=True)
@@ -175,7 +173,7 @@ def format():
     worksheet.set_column('Y:Z', 12 )
     worksheet.set_column('AA:AA', 18 )
 
-writer1 = ExcelWriter('Visibility ' + str(today) + '.xlsx')
+writer1 = ExcelWriter('04_Visibility\\Visibility ' + str(today) + '.xlsx')
 V.to_excel(writer1, 'MASTER', index = False )   
 workbook = writer1.book
 worksheet = writer1.sheets['MASTER']
@@ -193,7 +191,7 @@ worksheet = writer1.sheets['OS']
 writer1.save()
 
 doc_name = 'Visibility Report '
-part = 'Visibility ' + str(today) + '.xlsx'
+part = '04_Visibility\\Visibility ' + str(today) + '.xlsx'
 message = 'Visibility Report' + str(today)
 maillist = "MailList_Merch.txt"
 
@@ -222,7 +220,7 @@ def format1():
     worksheet.set_column('S:W', 20 )
     worksheet.set_column('X:X', 6 )
 
-writer2 = ExcelWriter('WHTrack ' + str(today) + '.xlsx')
+writer2 = ExcelWriter('04_Visibility\\WHTrack ' + str(today) + '.xlsx')
 Track = [WHTrack,Backlog]
 for t in Track:
     t.to_excel(writer2, t.name , index = False )   
@@ -232,7 +230,7 @@ for t in Track:
 writer2.save()
    
 doc_name = 'WH Stock Track Report '
-part = 'WHTrack ' + str(today) + '.xlsx'
+part = '04_Visibility\\WHTrack ' + str(today) + '.xlsx'
 message = 'Spree Stock Tracking on ' + str(today)
 maillist = "MailList_WH.txt"
 
@@ -285,7 +283,7 @@ WorkingCapital = pd.DataFrame(data = [NoBP, NBND, BND, NQC], index = idx).T
 WorkingCapital.applymap(lambda x: "R{:.8n}".format(x))
 WorkingCapital.name = "Working Capital"
 
-writer3 = ExcelWriter('ProductTrack QuickStats ' + str(today) + '.xlsx')
+writer3 = ExcelWriter('04_Visibility\\ProductTrack QuickStats ' + str(today) + '.xlsx')
 SimplesCount.to_excel(writer3, 'Sheet1', startrow = 3)
 UnitsCount.to_excel(writer3, 'Sheet1', startrow = 10)
 POCount.to_excel(writer3, 'Sheet1', startrow = 17)
@@ -305,7 +303,7 @@ worksheet.set_column('B:K', 18)
 writer3.save()
 
 #format QuickStats with openpyxl
-wb = load_workbook('ProductTrack QuickStats ' + str(today) + '.xlsx')
+wb = load_workbook('04_Visibility\\ProductTrack QuickStats ' + str(today) + '.xlsx')
 ws = wb.worksheets[0]
 
 cellsA = [ws['E4'],ws['E11'],ws['G4'],ws['D18'],ws['C25'],ws['D25']]
@@ -323,64 +321,13 @@ for row in cellsC:
     for cell in row:
         cell.style.number_format.format_code = '"R "#,##0.00'
         
-wb.save('ProductTrack QuickStats ' + str(today) + '.xlsx')
+wb.save('04_Visibility\\ProductTrack QuickStats ' + str(today) + '.xlsx')
 
 doc_name = 'ProductTrack QuickStats '
-part = 'ProductTrack QuickStats ' + str(today) + '.xlsx'
+part = '04_Visibility\\ProductTrack QuickStats ' + str(today) + '.xlsx'
 message = 'Where is my stock? Quick Stats to monitor production progress'
 maillist = "MailList_QS.txt"
 
 #if today.weekday() == 4:
 MyFunx.send_message(doc_name, message, part, maillist)
 
-#==============================================================================
-# Generate Supplier Compliance
-#==============================================================================
-
-if today.weekday() == 4:
-    SC = V[['GLMonth','Supplier','POs','Status','SKU','TotalUnits','TotalCost','DeliveryDue','Date booked','Date received','Partial delivery','Qty Counted','Qty Damaged','Buyer']]
-    
-    SC = SC[(SC['Status'].notnull() == True) & (SC['Status'] != 'Draft PO')]
-    
-    #SC['DeliveryBookedYN'] = (SC['Date booked'].notnull() == True) & (SC['Qty Counted'].notnull() == True)
-    
-    #SC['Date booked'] = SC['Date booked'].apply(lambda x: parse(x) if type(x) is str else np.nan)
-    #SC['Date received'] = SC['Date received'].apply(lambda x: parse(x) if type(x) is str else np.nan)
-    #SC['DeliveryDue'] = SC['DeliveryDue'].apply(lambda x: x.to_datetime())
-    
-    totalseconds = 3600*24
-    SC['MissedBooking_days'] = abs(SC['Date received'] - SC['Date booked'])/np.timedelta64(1,'D')
-    
-    SC['MissedPlan_days'] = abs(SC['DeliveryDue'] - SC['Date received'])/np.timedelta64(1,'D')
-    
-    sc0 = SC.groupby(['GLMonth','Supplier','POs']).agg({'TotalUnits':np.sum,'TotalCost':np.sum,'Qty Counted':np.sum,'Qty Damaged':np.sum,'MissedBooking_days':np.mean,'MissedPlan_days':np.mean}).reset_index()
-    
-    sc1 = sc0.groupby(['GLMonth','Supplier']).agg({'POs':np.size,'TotalUnits':np.sum,'TotalCost':np.sum,'Qty Counted':np.sum,'Qty Damaged':np.sum,'MissedBooking_days':np.mean,'MissedPlan_days':np.mean}).reset_index()
-    
-    sc1['InFull'] = abs(sc1.apply(lambda x : x['Qty Counted'] / x['TotalUnits'], axis = 1))
-    
-    sc0['int1'] = sc0['MissedBooking_days'].replace(np.nan, -1)
-    sc0.loc[sc0['int1']>0,'int1'] = 0
-    sc1['NotBooked'] = abs(sc0.groupby(['GLMonth','Supplier'])['int1'].sum().reset_index()['int1'])
-    sc1.NotBooked = sc1.NotBooked / sc1.POs
-    
-    sc0['int2'] = sc0['MissedPlan_days'].replace(np.nan, -1)
-    sc0.loc[sc0['int2']>0,'int2'] = 0
-    sc1['NotDelivered'] = abs(sc0.groupby(['GLMonth','Supplier'])['int2'].sum().reset_index()['int2'])
-    sc1.NotDelivered = sc1.NotDelivered / sc1.POs
-    
-    SupComp = sc1[['GLMonth','Supplier','TotalCost','POs','TotalUnits','MissedBooking_days','NotBooked','MissedPlan_days','NotDelivered','InFull','Qty Damaged']]
-    SupComp = SupComp.rename(columns={'MissedBooking_days':'Missed booking (avg days)','MissedPlan_days':'Missed DeliveryDue (avg days)'}, inplace = False)
-    SupComp = SupComp.sort(columns = ['GLMonth','NotBooked','NotDelivered','InFull','TotalCost'], ascending = [1,0,0,1,0], inplace = False, na_position = 'first')
-    
-    writerx = ExcelWriter('SupplierCompliance ' + str(today) + '.xlsx')
-    SupComp.to_excel(writerx, 'SupComp', index = False)   
-    workbook = writerx.book
-    worksheet = writerx.sheets['SupComp']
-    worksheet.set_column('A:A', 8 )
-    worksheet.set_column('B:B', 25)
-    worksheet.set_column('C:E', 12)
-    worksheet.set_column('F:I', 22)
-    worksheet.set_column('J:K', 10)
-    writerx.save()
-    
