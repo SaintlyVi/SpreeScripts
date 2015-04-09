@@ -196,6 +196,5 @@ part = '04_Visibility\\ProductTrack QuickStats ' + str(today) + '.xlsx'
 message = 'Where is my stock? Quick Stats to monitor production progress'
 maillist = "MailList_QS.txt"
 
-#if today.weekday() == 4:
 MyFunx.send_message(doc_name, message, part, maillist)
 

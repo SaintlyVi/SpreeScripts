@@ -35,7 +35,7 @@ def InboundData():
     #Import Brightpearl Detail Report data
     columns = ["Order ID", "Ref", "SKU", "Status", "Quantity"]
     BPdetail = pd.read_csv('BPdetail.csv', header = 0, usecols = columns)
-    BPdetail['Order ID'] = BPdetail['Order ID'].map(lambda x: str(x))
+    BPdetail['Order ID'] = BPdetail['Order ID'].map(lambda x: unicode(x))
     BPdetail.rename(columns={'Order ID': 'POs', 'Quantity':'BP Qty'}, inplace=True)
     BPdet = BPdetail[BPdetail['Status'].str.contains('Cancel PO')==False] 
     
@@ -79,7 +79,7 @@ def InboundData():
     Stock = pd.ExcelFile('Z:\\SUPPLY CHAIN\\Python Scripts\\02_StockCount\\Rolling Stock.xlsx')
     QCed = Stock.parse('Sheet1', skiprows = 0, index = None, parse_cols = (1,3,4,5))
     QCed.rename(columns={'Date': 'LastQCed', 'PO':'POs','ProductID':'SKU'}, inplace=True)
-    poqc = [str(p) for p in QCed['POs']]
+    poqc = [unicode(p) for p in QCed['POs']]
     QCed['POs'] = poqc
     QCed = QCed.groupby(['POs','SKU']).agg({'Qty Counted':np.sum, 'LastQCed':np.max})
     QCed.reset_index(inplace=True)
@@ -97,8 +97,8 @@ def InboundData():
     ## dateparse = "ActualGoLiveDate"
     
     pw = raw_input("Enter SQL Server database password: ")
-    Lulu =  MyFunx.sql_import("vw_ProcurementPipeline","ActualGoLiveDate",pw)
-    Planned = Lulu[['PlannedGoLiveDayOfWeek','PlannedGoLiveMonth','PlannedGoLiveYear','BuyerPlanName','BuyerPlanStatus','EmployeeFirstName','PlannedUnitCostExclTax','PlannedTotalQuantity','PlannedTotalCostExclTax','SimpleSKU','SimpleName','ConfigName','ConfigSKU','ProcurementStatus','ProcurementProductCategoryL3','ActualGoLiveDate','Supplier','Designer','EANNumber','BarCode']]
+    Lulu =  MyFunx.sql_import("vw_ProcurementPipeline",["ActualGoLiveDate","PlannedGoLiveDate"], pw)
+    Planned = Lulu[['PlannedGoLiveDayOfWeek','PlannedGoLiveMonth','PlannedGoLiveYear','PlannedGoLiveDate','BuyerPlanName','BuyerPlanStatus','EmployeeFirstName','PlannedUnitCostExclTax','PlannedTotalQuantity','PlannedTotalCostExclTax','SimpleSKU','SimpleName','ConfigName','ConfigSKU','ProcurementStatus','ProcurementProductCategoryL3','ActualGoLiveDate','Supplier','Designer','EANNumber','BarCode']]
     #Merge EAN, BarCode information with SKU
     SKU = Planned['EANNumber'].combine_first(Planned['SimpleSKU'])
     Planned['SKU'] = Planned['BarCode'].combine_first(SKU)
@@ -107,7 +107,7 @@ def InboundData():
         Planned = Planned[((Planned.PlannedGoLiveMonth >= lastmonth) & (Planned.PlannedGoLiveYear == today.year)) | ((Planned.PlannedGoLiveMonth <= nextmonth) & (Planned.PlannedGoLiveYear == today.year))]
     else:    
         Planned = Planned[((Planned.PlannedGoLiveMonth >= lastmonth) & (Planned.PlannedGoLiveYear == today.year)) & ((Planned.PlannedGoLiveMonth <= nextmonth) & (Planned.PlannedGoLiveYear == today.year))]
-    Planned.rename(columns={'PlannedGoLiveDayOfWeek':'GLDay','PlannedGoLiveMonth':'GLMonth','PlannedGoLiveYear':'GLYear', 'EmployeeFirstName':'Buyer','ProcurementProductCategoryL3':'Category', 'PlannedUnitCostExclTax':'UnitCost','PlannedTotalQuantity':'TotalUnits','PlannedTotalCostExclTax':'TotalCost'}, inplace=True)
+    Planned.rename(columns={'PlannedGoLiveDayOfWeek':'GLDay','PlannedGoLiveMonth':'GLMonth','PlannedGoLiveYear':'GLYear','PlannedGoLiveDate':'GLDate', 'EmployeeFirstName':'Buyer','ProcurementProductCategoryL3':'Category', 'PlannedUnitCostExclTax':'UnitCost','PlannedTotalQuantity':'TotalUnits','PlannedTotalCostExclTax':'TotalCost'}, inplace=True)
     Planned = Planned[Planned['TotalCost'] > 0]
     Planned.loc[Planned.ProcurementStatus == 'Deleted', ['TotalUnits','TotalCost']] = 0
     
