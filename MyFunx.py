@@ -78,16 +78,16 @@ def data_history( DataName, DocName, DaysCounting, path, sheet = 'Sheet1' ):
     NewData['Age'] = NewData.loc[:,'Date'] - period
     NewData.reset_index(drop = True, level = 0, inplace = True)
     NewData = NewData[NewData['Age'] >= 0]
-                 
+                    
     writer = ExcelWriter(filename)
-    NewData.to_excel(writer, sheet, index = False )   
+    NewData.to_excel(writer, sheet, index = False)   
     writer.save()
 
 def sql_import(table, dateparse, pw):
     # This function pulls data from SQL server    
     
     connection_string = "DRIVER={SQL Server};SERVER=02CPT-TLSQL01;DATABASE=Spree SSBI;UID=SSBI_PaymentOps;PWD=" + pw + ";TABLE=" + table
-    cnxn = pyodbc.connect(connection_string)
+    cnxn = pyodbc.connect(connection_string, unicode_results=True)
     sql = "select * from " + table
     df = psql.read_sql(sql, cnxn, parse_dates = [dateparse])
     return df

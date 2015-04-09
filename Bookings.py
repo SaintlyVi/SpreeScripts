@@ -19,8 +19,8 @@ import MyFunx
 today = date.today() 
 
 #Retrieve data from Simplybook export
-columns = ["Date","Time","Event","Client name","Client email","Is cancelled","Comment","Record date","Additional fields"]
-SBexport = pd.read_csv('SBexport.csv', skiprows = [0], header = 1, usecols = columns, parse_dates=[0], dayfirst=True)
+columns = ["Date","Time","Event","Client name","Client email","Is cancelled","Record date","Additional fields"]
+SBexport = pd.read_csv('SBexport.csv', skiprows = [1], header = 1, usecols = columns, parse_dates=[0], dayfirst=True)
 
 #Separate all additional fields
 a = SBexport["Additional fields"].str.split(';').apply(Series, 1).unstack()
@@ -46,7 +46,7 @@ m = df.join(x)
 
 #Create Supplier Contacts output files
 S = m[['Date','Event','POs','Supplier','Brand','Client name','Client email']]
-S = S[S['POs'] != ""]
+S = S[S['POs'].isnull() == False]
 path = '03_Damages_OS'
 DataName = S
 DocName = 'Supplier Contacts'

@@ -64,7 +64,7 @@ BPdetail = pd.read_csv('BPdetail.csv', header = 0, usecols = columns, dtype = {'
 
 #Import Supplier Contacts
 Contacts = pd.ExcelFile('03_Damages_OS\\Supplier Contacts.xlsx')
-Contacts = Contacts.parse('Sheet1', skiprows = 0, index = None, parse_cols = (2,5,6))
+Contacts = Contacts.parse('Sheet1', skiprows = 0, index = None, parse_cols = (2,3,6))
 Contacts.drop_duplicates(subset = ['POs'], inplace = True, take_last = True)
  
 #Merge Brightpearl and Damages data

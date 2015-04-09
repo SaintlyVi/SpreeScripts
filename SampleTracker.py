@@ -39,7 +39,7 @@ SamplesPlan = SamplesPlan[(SamplesPlan.GLMonth >= today.month - 2) & (SamplesPla
 #==============================================================================
 #History Data
 data = pd.ExcelFile('05_Samples\\SampleTrack.xlsx')
-SH = data.parse('Master', header = 0, skiprows = 0, parse_cols = 'C,M:R', parse_dates = True)
+SH = data.parse('Master', header = 0, skiprows = 0, parse_cols = 'B,L:R', parse_dates = True)
 SH.drop_duplicates(inplace = True)
 
 c = gspread.Client(auth=('spreewarehouse@gmail.com', 'spreeapp'))
@@ -89,19 +89,21 @@ AllSamples = pd.merge(SamplesPlan, samples, how = 'outer', on = 'ConfigSKU', sor
 AllSamples = AllSamples.sort(columns = ['01_WHSamples_OUT'], ascending = True, na_position = 'last')
 AllSamples = AllSamples[['ConfigSKU','SKU','ConfigName','Supplier','Designer','Category','GLDay','GLMonth','GLYear', 'Buyer','Date QCed','01_WHSamples_OUT','02_SampleRoom_IN','03_SampleRoom_TO_studio','04_SampleRoom_FROM_studio','05_SampleRoom_OUT','06_WHSamples_IN']]
 
-SampleSummary = AllSamples.groupby(['GLYear','GLMonth']).agg({'Month':'count','Date QCed':'count','01_WHSamples_OUT':'count','02_SampleRoom_IN':'count','03_SampleRoom_TO_studio':'count','04_SampleRoom_FROM_studio':'count','05_SampleRoom_OUT':'count','06_WHSamples_IN':'count'})
-SampleSummary = SampleSummary[['Month','Date QCed','01_WHSamples_OUT','02_SampleRoom_IN','03_SampleRoom_TO_studio','04_SampleRoom_FROM_studio','05_SampleRoom_OUT','06_WHSamples_IN']]
+SampleSummary = AllSamples.groupby(['GLYear','GLMonth']).agg({'Date QCed':'count','01_WHSamples_OUT':'count','02_SampleRoom_IN':'count','03_SampleRoom_TO_studio':'count','04_SampleRoom_FROM_studio':'count','05_SampleRoom_OUT':'count','06_WHSamples_IN':'count'})
+SampleSummary = SampleSummary[['Date QCed','01_WHSamples_OUT','02_SampleRoom_IN','03_SampleRoom_TO_studio','04_SampleRoom_FROM_studio','05_SampleRoom_OUT','06_WHSamples_IN']]
 
 doc_name = 'Samples Tracker '
-part = '05_Samples\\SampleTrack ' + str(today) + '.xlsx'
+part = '05_Samples\\SampleTrack TEST ' + str(today) + '.xlsx'
 message = 'Spree Samples Tracking ' + str(date.today())
 maillist = "MailList_Samples.txt" 
      
 writer = ExcelWriter(part)
-SampleSummary.to_excel(writer,'EasyTrack')
-AllSamples.to_excel(writer,'Master', index = False)
+
+SampleSummary.to_excel(writer,'EasyTrack',encoding = 'utf-8')
+AllSamples.to_excel(writer,'Master', index = False, encoding = 'utf-8')
 workbook = writer.book
 wksht = writer.sheets['Master']
+
 wksht.set_column('A:B', 10)
 wksht.set_column('C:C', 14)
 wksht.set_column('D:G', 18)
@@ -118,7 +120,7 @@ MyFunx.send_message(doc_name, message, part, maillist)
     
 #Create SampleTrack Reference doc
     
-part2 = '05_Samples\\SampleTrack.xlsx'
+part2 = '05_Samples\\SampleTrack TEST.xlsx'
      
 writer2 = ExcelWriter(part2)
 AllSamples.to_excel(writer2,'Master', index = False)

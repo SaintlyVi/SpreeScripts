@@ -5,156 +5,24 @@ Created on Tue Dec 02 12:53:35 2014
 
 @author: Wiebke.Toussaint
 """
-#==============================================================================
-# #VISIBILITY
-# #Product Tracking Report looking 5 weeks back, 1 week forward
-# #TO DO before running the script:
-# #1. Download -5week + 1 week Brightpearl Detail Report (filter DELIVERY DATE)
-# #2. Download -2month + 1 month Brightpearl PO Report
-# #3. Refresh Lulu PowerQuery
-# #4. Refresh IBOI1003 PowerQuery
-# #5. Run Damages Script
-# #6. Run Stock Count Script
-#==============================================================================
 
-import numpy as np
 import pandas as pd
-from pandas import DataFrame, ExcelWriter
+from pandas import ExcelWriter
 from datetime import date
-import gspread
 from openpyxl.reader.excel import load_workbook
-import MyFunx
+import MyFunx, AllData
 
-today = date.today()
-lastmonth = today.month - 2
-nextmonth = today.month + 1
-
-#==============================================================================
-# Import from all required data sources
-#==============================================================================
-#Import Brightpearl Detail Report data
-columns = ["Order ID", "Ref", "SKU", "Status", "Quantity"]
-BPdetail = pd.read_csv('BPdetail.csv', header = 0, usecols = columns)
-BPdetail['Order ID'] = BPdetail['Order ID'].map(lambda x: str(x))
-BPdetail.rename(columns={'Order ID': 'POs', 'Quantity':'BP Qty'}, inplace=True)
-BPdet = BPdetail[BPdetail['Status'].str.contains('Cancel PO')==False] 
-
-CancelledPOs = BPdetail[BPdetail['Status']=='Cancel PO']
-CancelledPOs = CancelledPOs.groupby('POs').agg({'SKU':'count'})
-
-#Import Brightpearl PO Report data
-columns = ["Order ID", "Delivery due"]
-BPreport = pd.read_csv('BPreport.csv', header = 0, usecols = columns, parse_dates = [1])
-BPreport = BPreport.dropna(axis = 0,how = 'all') #removes empty rows
-BPreport['Order ID'] = BPreport['Order ID'].map(lambda x: x.strip('PO#')) #removes text in front of PO number
-BPreport.rename(columns={'Order ID': 'POs', 'Delivery due':'DeliveryDue'}, inplace=True)
-
-BP = pd.merge(BPdet, BPreport, on = 'POs', how = 'left', sort = False)
-
-#Import Epping Receiving Report data
-c = gspread.Client(auth=('spreewarehouse@gmail.com', 'spreeapp'))
-c.login()
-
-sht = c.open('Epping Receiving Report')
-worksheet = sht.worksheet('Booked')
-
-info = worksheet.get_all_values()
-headers = info.pop(0)
-B_R = DataFrame(data = info, columns = headers)
-
-Bookd = B_R[['POs','Date booked']]
-Bookd = Bookd.replace('',np.nan)
-Bookd = Bookd.dropna(subset = ['Date booked'], thresh = 1)
-Bookd = Bookd.drop_duplicates(subset = ['POs'], take_last = False)
-Bookd['Date booked'] = pd.to_datetime(Bookd['Date booked'], infer_datetime_format = True)
-
-Receivd = B_R[['POs', 'Partial delivery', 'Date received']]
-Receivd = Receivd.replace('',np.nan)
-Receivd = Receivd.dropna(subset = ['Date received'], thresh = 1)
-Receivd = Receivd.drop_duplicates(subset = ['POs'], take_last = True)
-Receivd = Receivd[Receivd.POs != np.nan]
-Receivd['Date received'] = pd.to_datetime(Receivd['Date received'], infer_datetime_format = True)
-
-#Import Rolling Stock data
-Stock = pd.ExcelFile('Z:\\SUPPLY CHAIN\\Python Scripts\\02_StockCount\\Rolling Stock.xlsx')
-QCed = Stock.parse('Sheet1', skiprows = 0, index = None, parse_cols = (1,3,4,5))
-QCed.rename(columns={'Date': 'LastQCed', 'PO':'POs','ProductID':'SKU'}, inplace=True)
-poqc = [str(p) for p in QCed['POs']]
-QCed['POs'] = poqc
-QCed = QCed.groupby(['POs','SKU']).agg({'Qty Counted':np.sum, 'LastQCed':np.max})
-QCed.reset_index(inplace=True)
-
-#Import Rolling Damages
-Damages = pd.ExcelFile('03_Damages_OS\\Rolling Damages.xlsx')
-Damages = Damages.parse('Sheet1', skiprows = 0, index = None)
-SKU = Damages['ProductID'].value_counts()
-Damagd = DataFrame(data = SKU)
-Damagd.reset_index(level=0, inplace=True)
-Damagd.columns = ['SKU', 'Qty Damaged']
-
-#Import Lulu Assortment Plans
-## table = "vw_ProcurementPipeline"
-## dateparse = "ActualGoLiveDate"
-
-pw = raw_input("Enter SQL Server database password: ")
-Lulu =  MyFunx.sql_import("vw_ProcurementPipeline","ActualGoLiveDate",pw)
-Planned = Lulu[['PlannedGoLiveDayOfWeek','PlannedGoLiveMonth','PlannedGoLiveYear','BuyerPlanName','BuyerPlanStatus','EmployeeFirstName','PlannedUnitCostExclTax','PlannedTotalQuantity','PlannedTotalCostExclTax','SimpleSKU','SimpleName','ConfigName','ConfigSKU','ProcurementStatus','ProcurementProductCategoryL3','ActualGoLiveDate','Supplier','Designer','EANNumber','BarCode']]
-#Merge EAN, BarCode information with SKU
-SKU = Planned['EANNumber'].combine_first(Planned['SimpleSKU'])
-Planned['SKU'] = Planned['BarCode'].combine_first(SKU)
-Planned.drop_duplicates(subset = ['SKU','PlannedGoLiveMonth'], inplace = True, take_last = True)
-if lastmonth == 11 | 12:
-    Planned = Planned[((Planned.PlannedGoLiveMonth >= lastmonth) & (Planned.PlannedGoLiveYear == today.year)) | ((Planned.PlannedGoLiveMonth <= nextmonth) & (Planned.PlannedGoLiveYear == today.year))]
-else:    
-    Planned = Planned[((Planned.PlannedGoLiveMonth >= lastmonth) & (Planned.PlannedGoLiveYear == today.year)) & ((Planned.PlannedGoLiveMonth <= nextmonth) & (Planned.PlannedGoLiveYear == today.year))]
-Planned.rename(columns={'PlannedGoLiveDayOfWeek':'GLDay','PlannedGoLiveMonth':'GLMonth','PlannedGoLiveYear':'GLYear', 'EmployeeFirstName':'Buyer','ProcurementProductCategoryL3':'Category', 'PlannedUnitCostExclTax':'UnitCost','PlannedTotalQuantity':'TotalUnits','PlannedTotalCostExclTax':'TotalCost'}, inplace=True)
-Planned = Planned[Planned['TotalCost'] > 0]
-Planned = Planned[Planned['ProcurementStatus'] != 'Deleted']
-
-#Import Dynaman IBOI1003 Inbound Order Received Messages
-## table = "vw_WarehouseInboundItemsReceived"
-## dateparse = "Timestamp"
-
-IBOI1003 =  MyFunx.sql_import("vw_WarehouseInboundItemsReceived","Timestamp",pw)
-IBOI1003 = IBOI1003[['MessageReference','ItemCode','QuantityReceived','Timestamp']]
-TaknIn = IBOI1003.groupby(['MessageReference','ItemCode']).agg({'QuantityReceived':np.sum, 'Timestamp':np.max})
-TaknIn.reset_index(inplace=True)
-TaknIn.columns = ['POs','SKU','OTDLastReceived','Qty Received']
-TaknIn['POs'] = TaknIn['POs'].apply(lambda x: x if len(x) < 7 else 0)
-TaknIn = TaknIn[TaknIn['POs'] != 0]
-
-#Import Dynaman ITMI1002 
-## table = "vw_WarehouseStockAvailability"
-## dateparse = "Timestamp"
-
-ITMI1002 =  MyFunx.sql_import("vw_WarehouseStockAvailability","Timestamp",pw)
-ITMI1002 = ITMI1002[['ITEM_CODE','QTY']]
-PutAway = pd.pivot_table(ITMI1002, values = ['QTY'], index = ['ITEM_CODE'], aggfunc=np.sum)
-PutAway.reset_index(inplace=True)
-PutAway.columns = ['SKU','Qty PutAway']
-
-Merge = pd.merge(Planned, BP, on = 'SKU', how = 'left', sort = False)
-Merge1 = pd.merge(Merge, Bookd, on = 'POs', how = 'left', sort = False)
-Merge2 = pd.merge(Merge1, Receivd, on = 'POs', how = 'left', sort = False)
-Merge3 = pd.merge(Merge2, QCed, on = ['SKU','POs'], how = 'left', sort = False)
-Merge4 = pd.merge(Merge3, Damagd, on = 'SKU', how = 'left', sort = False)
-Merge5 = pd.merge(Merge4, TaknIn, on = ['SKU','POs'], how = 'left', sort = False)
-Visibility = pd.merge(Merge5, PutAway, on = 'SKU', how = 'left')
-Visibility.drop_duplicates(inplace = True)
-Va = Visibility[Visibility.duplicated(subset = ['SKU'], take_last = True)==False]
-Vb = Visibility[Visibility.duplicated(subset = ['SKU'], take_last = True)==True]
-Vc = Vb[Vb['Status']!='Draft PO']
-Visibility = Va.append(Vc, ignore_index = True)
-Visibility.replace("", np.nan, inplace = True)
-
+Visibility = AllData.InboundData()
 V1 = Visibility[Visibility['Ref'].str.contains("sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==False] 
 V2 = Visibility[Visibility['Ref'].isnull()==True]
 V = V1.append(V2, ignore_index=True)
 V = V.sort(['Date received','Date booked','POs'], inplace = False, na_position = 'first')
 V = V[['GLYear','GLMonth','GLDay','Buyer', 'UnitCost','TotalUnits','TotalCost','SKU','SimpleName','ProcurementStatus','Category','Supplier','DeliveryDue','POs','BP Qty','Ref','Status','Date booked','Partial delivery','Date received','LastQCed','Qty Counted','Qty Damaged','OTDLastReceived','Qty Received','Qty PutAway','ActualGoLiveDate']]
-
+    
 OS = Visibility[Visibility['Ref'].str.contains("OS|Os|OVERSUPPLY")==True]
 OS = OS[['GLYear','GLMonth','GLDay','Buyer', 'UnitCost','TotalUnits','TotalCost','SKU','SimpleName','Category','Supplier','POs','Ref','Status','Qty Damaged','OTDLastReceived','Qty Received']]
+
+today = date.today()
 
 #==============================================================================
 # Generate MerchTrack Output Data
