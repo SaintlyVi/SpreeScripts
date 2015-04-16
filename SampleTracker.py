@@ -94,7 +94,7 @@ SampleSummary = AllSamples.groupby(['GLYear','GLMonth']).agg({'Date QCed':'count
 SampleSummary = SampleSummary[['Date QCed','01_WHSamples_OUT','02_SampleRoom_IN','03_SampleRoom_TO_studio','04_SampleRoom_FROM_studio','05_SampleRoom_OUT','06_WHSamples_IN']]
 
 doc_name = 'Samples Tracker '
-part = '05_Samples\\SampleTrack  ' + str(today) + '.xlsx'
+part = '05_Samples\\SampleTrack ' + str(today) + '.xlsx'
 message = 'Spree Samples Tracking ' + str(date.today())
 maillist = "MailList_Samples.txt" 
      

@@ -87,7 +87,7 @@ def sql_import(table, dateparse, pw):
     # This function pulls data from SQL server    
     
     connection_string = "DRIVER={SQL Server};SERVER=02CPT-TLSQL01;DATABASE=Spree SSBI;UID=SSBI_PaymentOps;PWD=" + pw + ";TABLE=" + table
-    cnxn = pyodbc.connect(connection_string, unicode_results=True)
+    cnxn = pyodbc.connect(connection_string, charset = 'utf8', unicode_results=True)
     sql = "select * from " + table
     df = psql.read_sql(sql, cnxn, parse_dates = dateparse)
     return df

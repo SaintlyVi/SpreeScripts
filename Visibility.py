@@ -19,17 +19,16 @@ V3 = V2.loc[V2.TotalCost > 0,:]
 V4 = Visibility[Visibility['Ref'].isnull()==True]
 Vis = V1.append([V3,V4], ignore_index=True)
 
-Samples = pd.ExcelFile('05_Samples\\SampleTrack.xlsx')
-Samples = Samples.parse('Master', skiprows = 0, index = None)
-Samples = Samples[['SKU','03_SampleRoom_TO_studio']]
-Samples.loc[Samples['03_SampleRoom_TO_studio'].notnull(),'SampleCount'] = 1
+Samples = pd.ExcelFile(u'05_Samples\\SampleTrack.xlsx').parse(u'Master', skiprows = 0, index = None, encoding='utf-8')
+Samples = Samples[[u'SKU',u'03_SampleRoom_TO_studio']]
+Samples.loc[Samples[u'03_SampleRoom_TO_studio'].notnull(),u'SampleCount'] = 1
 
-V = pd.merge(Vis, Samples, on = 'SKU', how = 'left', sort = False )
+V = pd.merge(Vis, Samples, on = u'SKU', how = u'left', sort = False )
 
 V = V.sort(['Date received','Date booked','POs'], inplace = False, na_position = 'first')
 V = V[['GLYear','GLMonth','GLDay','Buyer', 'UnitCost','TotalUnits','TotalCost','SKU','SimpleName','ProcurementStatus','Category','Supplier','DeliveryDue','POs','BP Qty','Ref','Status','Date booked','Partial delivery','Date received','LastQCed','Qty Counted','Qty Damaged','SampleCount','OTDLastReceived','Qty Received','Qty PutAway','ActualGoLiveDate']]
  
-OS = Visibility[Visibility['Ref'].str.contains("OS|Os|OVERSUPPLY")==True]
+OS = Visibility[Visibility['Ref'].str.contains(u"OS|Os|OVERSUPPLY")==True]
 OS = OS[['GLYear','GLMonth','GLDay','Buyer', 'UnitCost','TotalUnits','TotalCost','SKU','SimpleName','Category','Supplier','POs','Ref','Status','Qty Damaged','OTDLastReceived','Qty Received']]
 
 today = date.today()
@@ -56,21 +55,21 @@ V.to_excel(writer1, 'MASTER', index = False, encoding = 'utf-8' )
 workbook = writer1.book
 worksheet = writer1.sheets['MASTER']
 format()
-Buyers = pd.Series(V['Buyer'].unique())
+Buyers = pd.Series(V[u'Buyer'].unique())
 for b in Buyers:
     DataName = V[V['Buyer']==b]
     DataName.to_excel(writer1, b , index = False )   
     workbook = writer1.book
     worksheet = writer1.sheets[b]
     format()
-OS.to_excel(writer1, 'OS', index = False, encoding = 'utf-8' )
+OS.to_excel(writer1, u'OS', index = False, encoding = 'utf-8' )
 workbook = writer1.book
 worksheet = writer1.sheets['OS']
 writer1.save()
 
-doc_name = 'Visibility Report '
-part = '04_Visibility\\Visibility ' + str(today) + '.xlsx'
-message = 'Visibility Report' + str(today)
+doc_name = u'Visibility Report '
+part = u'04_Visibility\\Visibility ' + str(today) + '.xlsx'
+message = u'Visibility Report' + str(today)
 maillist = "MailList_Merch.txt"
 
 #MyFunx.send_message(doc_name, message, part, maillist)

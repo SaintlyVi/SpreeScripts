@@ -33,10 +33,10 @@ def InboundData():
     # Import from all required data sources
     #==============================================================================
     #Import Brightpearl Detail Report data
-    columns = ["Order ID", "Ref", "SKU", "Status", "Quantity"]
-    BPdetail = pd.read_csv('BPdetail.csv', header = 0, usecols = columns)
+    columns = [u"Order ID", u"Ref", u"SKU", u"Status", u"Quantity"]
+    BPdetail = pd.read_csv('BPdetail.csv', header = 0, usecols = columns, encoding = 'iso-8859-1')
     BPdetail['Order ID'] = BPdetail['Order ID'].map(lambda x: unicode(x))
-    BPdetail.rename(columns={'Order ID': 'POs', 'Quantity':'BP Qty'}, inplace=True)
+    BPdetail.rename(columns={'Order ID': u'POs', 'Quantity': u'BP Qty'}, inplace=True)
     BPdet = BPdetail[BPdetail['Status'].str.contains('Cancel PO')==False] 
     
     CancelledPOs = BPdetail[BPdetail['Status']=='Cancel PO']
@@ -62,11 +62,12 @@ def InboundData():
     headers = info.pop(0)
     B_R = DataFrame(data = info, columns = headers)
     
-    Bookd = B_R[['POs','Date booked']]
+    Bookd = B_R[[u'POs',u'Date booked']]
     Bookd = Bookd.replace('',np.nan)
-    Bookd = Bookd.dropna(subset = ['Date booked'], thresh = 1)
-    Bookd = Bookd.drop_duplicates(subset = ['POs'], take_last = False)
-    Bookd['Date booked'] = pd.to_datetime(Bookd['Date booked'], infer_datetime_format = True)
+    Bookd = Bookd.dropna(subset = [u'Date booked'], thresh = 1)
+    Bookd = Bookd.drop_duplicates(subset = [u'POs'], take_last = False)
+    Bookd = Bookd[Bookd.POs != np.nan]
+    Bookd[u'Date booked'] = pd.to_datetime(Bookd[u'Date booked'], infer_datetime_format = True)
     
     Receivd = B_R[['POs', 'Partial delivery', 'Date received']]
     Receivd = Receivd.replace('',np.nan)
@@ -77,8 +78,8 @@ def InboundData():
     
     #Import Rolling Stock data
     Stock = pd.ExcelFile('Z:\\SUPPLY CHAIN\\Python Scripts\\02_StockCount\\Rolling Stock.xlsx')
-    QCed = Stock.parse('Sheet1', skiprows = 0, index = None, parse_cols = (1,3,4,5))
-    QCed.rename(columns={'Date': 'LastQCed', 'PO':'POs','ProductID':'SKU'}, inplace=True)
+    QCed = Stock.parse('Sheet1', skiprows = 0, index = None, parse_cols = (1,3,4,5), encoding = 'utf-8')
+    QCed.rename(columns={'Date': u'LastQCed', 'PO':u'POs','ProductID':u'SKU'}, inplace=True)
     poqc = [unicode(p) for p in QCed['POs']]
     QCed['POs'] = poqc
     QCed = QCed.groupby(['POs','SKU']).agg({'Qty Counted':np.sum, 'LastQCed':np.max})
@@ -86,11 +87,11 @@ def InboundData():
     
     #Import Rolling Damages
     Damages = pd.ExcelFile('03_Damages_OS\\Rolling Damages.xlsx')
-    Damages = Damages.parse('Sheet1', skiprows = 0, index = None)
+    Damages = Damages.parse('Sheet1', skiprows = 0, index = None, encoding = 'utf-8')
     SKU = Damages['SKU'].value_counts()
     Damagd = DataFrame(data = SKU)
     Damagd.reset_index(level=0, inplace=True)
-    Damagd.columns = ['SKU', 'Qty Damaged']
+    Damagd.columns = [u'SKU', u'Qty Damaged']
     
     #Import Lulu Assortment Plans
     ## table = "vw_ProcurementPipeline"
