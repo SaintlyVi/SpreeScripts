@@ -13,12 +13,22 @@ from openpyxl.reader.excel import load_workbook
 import MyFunx, AllData
 
 Visibility = AllData.InboundData()
-V1 = Visibility[Visibility['Ref'].str.contains("sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==False] 
-V2 = Visibility[Visibility['Ref'].isnull()==True]
-V = V1.append(V2, ignore_index=True)
+V1 = Visibility[Visibility['Ref'].str.contains(u"sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==False] 
+V2 = Visibility[Visibility['Ref'].str.contains(u"sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==True]
+V3 = V2.loc[V2.TotalCost > 0,:]
+V4 = Visibility[Visibility['Ref'].isnull()==True]
+Vis = V1.append([V3,V4], ignore_index=True)
+
+Samples = pd.ExcelFile('05_Samples\\SampleTrack.xlsx')
+Samples = Samples.parse('Master', skiprows = 0, index = None)
+Samples = Samples[['SKU','03_SampleRoom_TO_studio']]
+Samples.loc[Samples['03_SampleRoom_TO_studio'].notnull(),'SampleCount'] = 1
+
+V = pd.merge(Vis, Samples, on = 'SKU', how = 'left', sort = False )
+
 V = V.sort(['Date received','Date booked','POs'], inplace = False, na_position = 'first')
-V = V[['GLYear','GLMonth','GLDay','Buyer', 'UnitCost','TotalUnits','TotalCost','SKU','SimpleName','ProcurementStatus','Category','Supplier','DeliveryDue','POs','BP Qty','Ref','Status','Date booked','Partial delivery','Date received','LastQCed','Qty Counted','Qty Damaged','OTDLastReceived','Qty Received','Qty PutAway','ActualGoLiveDate']]
-    
+V = V[['GLYear','GLMonth','GLDay','Buyer', 'UnitCost','TotalUnits','TotalCost','SKU','SimpleName','ProcurementStatus','Category','Supplier','DeliveryDue','POs','BP Qty','Ref','Status','Date booked','Partial delivery','Date received','LastQCed','Qty Counted','Qty Damaged','SampleCount','OTDLastReceived','Qty Received','Qty PutAway','ActualGoLiveDate']]
+ 
 OS = Visibility[Visibility['Ref'].str.contains("OS|Os|OVERSUPPLY")==True]
 OS = OS[['GLYear','GLMonth','GLDay','Buyer', 'UnitCost','TotalUnits','TotalCost','SKU','SimpleName','Category','Supplier','POs','Ref','Status','Qty Damaged','OTDLastReceived','Qty Received']]
 
@@ -36,13 +46,13 @@ def format():
     worksheet.set_column('J:M', 20 )
     worksheet.set_column('N:O', 8 )
     worksheet.set_column('P:U', 18 )
-    worksheet.set_column('V:W', 12 )
-    worksheet.set_column('X:X', 18 )
-    worksheet.set_column('Y:Z', 12 )
-    worksheet.set_column('AA:AA', 18 )
+    worksheet.set_column('V:X', 12 )
+    worksheet.set_column('Y:Y', 18 )
+    worksheet.set_column('Z:AA', 12 )
+    worksheet.set_column('AB:AB', 18 )
 
 writer1 = ExcelWriter('04_Visibility\\Visibility ' + str(today) + '.xlsx')
-V.to_excel(writer1, 'MASTER', index = False )   
+V.to_excel(writer1, 'MASTER', index = False, encoding = 'utf-8' )   
 workbook = writer1.book
 worksheet = writer1.sheets['MASTER']
 format()
@@ -53,7 +63,7 @@ for b in Buyers:
     workbook = writer1.book
     worksheet = writer1.sheets[b]
     format()
-OS.to_excel(writer1, 'OS', index = False )
+OS.to_excel(writer1, 'OS', index = False, encoding = 'utf-8' )
 workbook = writer1.book
 worksheet = writer1.sheets['OS']
 writer1.save()
@@ -63,7 +73,7 @@ part = '04_Visibility\\Visibility ' + str(today) + '.xlsx'
 message = 'Visibility Report' + str(today)
 maillist = "MailList_Merch.txt"
 
-MyFunx.send_message(doc_name, message, part, maillist)
+#MyFunx.send_message(doc_name, message, part, maillist)
 
 #==============================================================================
 # Generate WHTrack Output Data
@@ -102,11 +112,13 @@ part = '04_Visibility\\WHTrack ' + str(today) + '.xlsx'
 message = 'Spree Stock Tracking on ' + str(today)
 maillist = "MailList_WH.txt"
 
-MyFunx.send_message(doc_name, message, part, maillist)
+#MyFunx.send_message(doc_name, message, part, maillist)
 
 #==============================================================================
 # Generate ProductTrack QuickStats
 #==============================================================================
+
+#V = Visibility[Visibility['Ref'].str.contains(u"sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==False] 
 
 #ProductTrack
 SimplesCount = V.groupby('GLMonth').agg({'TotalUnits':'count','POs': 'count',\
@@ -146,8 +158,8 @@ BND = V[V['ND']==True].groupby(V['GLMonth']).sum()['TotalCost'] - (NoBP + NBND) 
 NQC = V[V['NQC']==True].groupby(V['GLMonth']).sum()['TotalCost'] - (NoBP + NBND + BND)  #Cost of SKUs not QCed
 NOTD = V[V['NOTD']==True].groupby(V['GLMonth']).sum()['TotalCost'] - (NoBP + NBND + BND + NQC)#Cost of SKUs not received by OTD
 
-idx = ['Not on Brightpearl', 'Not Booked Not Delivered', 'Booked Not Delivered', 'Not QCed']#, 'OTD Not Received']
-WorkingCapital = pd.DataFrame(data = [NoBP, NBND, BND, NQC], index = idx).T
+idx = ['Not on Brightpearl', 'Not Booked Not Delivered', 'Booked Not Delivered', 'Not QCed', 'OTD Not Received']
+WorkingCapital = pd.DataFrame(data = [NoBP, NBND, BND, NQC, NOTD], index = idx).T
 WorkingCapital.applymap(lambda x: "R{:.8n}".format(x))
 WorkingCapital.name = "Working Capital"
 
@@ -196,5 +208,5 @@ part = '04_Visibility\\ProductTrack QuickStats ' + str(today) + '.xlsx'
 message = 'Where is my stock? Quick Stats to monitor production progress'
 maillist = "MailList_QS.txt"
 
-MyFunx.send_message(doc_name, message, part, maillist)
+#MyFunx.send_message(doc_name, message, part, maillist)
 

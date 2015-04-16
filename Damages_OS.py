@@ -105,12 +105,12 @@ writer.save()
 clean1 = worksht.range('A2:C' + str(lgth + 5))
 for cl in clean1:
     cl.value = ""
-worksht.update_cells(clean1)
+#worksht.update_cells(clean1)
     
 clean2 = ws.range('A2:C' + str(l + 5))
 for cl in clean2:
     cl.value = ""
-ws.update_cells(clean2)
+#ws.update_cells(clean2)
 
 #Email Spree output file 
 doc_name = 'Daily Damages & Oversupply ' 
@@ -120,8 +120,9 @@ maillist = 'MailList_Damages.txt'
 MyFunx.send_message(doc_name, message, part, maillist)
 
 #Create 8 week rolling damages doc
-dmgmrg = pd.merge(dmgs, BPdetail, left_on = 'ProductID', right_on='SKU', how = 'left')
-dmgmrg = dmgmrg[['Date','Order ID','ProductID','Reason for damage','QC Responsible']]
+dmgs.columns = ['SKU','Reason for damage','QC Responsible','Date'] 
+dmgmrg = pd.merge(dmgs, BPdetail, on='SKU', how = 'left')
+dmgmrg = dmgmrg[['Date','Order ID','SKU','Reason for damage','QC Responsible']]
 path = '03_Damages_OS'    
 DataName = dmgmrg
 DocName = 'Rolling Damages'

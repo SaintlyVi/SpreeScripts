@@ -6,15 +6,15 @@ Created on Wed Apr 08 12:12:49 2015
 """
 
 #==============================================================================
-# #VISIBILITY
-# #Product Tracking Report looking 5 weeks back, 1 week forward
-# #TO DO before running the script:
-# #1. Download -5week + 1 week Brightpearl Detail Report (filter DELIVERY DATE)
-# #2. Download -2month + 1 month Brightpearl PO Report
-# #3. Refresh Lulu PowerQuery
-# #4. Refresh IBOI1003 PowerQuery
-# #5. Run Damages Script
-# #6. Run Stock Count Script
+##VISIBILITY
+##Product Tracking Report looking 5 weeks back, 1 week forward
+##TO DO before running the script:
+##1. Download -5week + 1 week Brightpearl Detail Report (filter DELIVERY DATE)
+##2. Download -2month + 1 month Brightpearl PO Report
+##3. Refresh Lulu PowerQuery
+##4. Refresh IBOI1003 PowerQuery
+##5. Run Damages Script
+##6. Run Stock Count Script
 #==============================================================================
 def InboundData():
     
@@ -87,7 +87,7 @@ def InboundData():
     #Import Rolling Damages
     Damages = pd.ExcelFile('03_Damages_OS\\Rolling Damages.xlsx')
     Damages = Damages.parse('Sheet1', skiprows = 0, index = None)
-    SKU = Damages['ProductID'].value_counts()
+    SKU = Damages['SKU'].value_counts()
     Damagd = DataFrame(data = SKU)
     Damagd.reset_index(level=0, inplace=True)
     Damagd.columns = ['SKU', 'Qty Damaged']
@@ -141,8 +141,10 @@ def InboundData():
     Merge5 = pd.merge(Merge4, TaknIn, on = ['SKU','POs'], how = 'left', sort = False)
     Visibility = pd.merge(Merge5, PutAway, on = 'SKU', how = 'left')
     Visibility.drop_duplicates(inplace = True)
-    Va = Visibility[Visibility.duplicated(subset = ['SKU'], take_last = True)==False]
-    Vb = Visibility[Visibility.duplicated(subset = ['SKU'], take_last = True)==True]
+    #remove duplicates that are in Draft PO status,assuming that these POs are outdated
+    Va = Visibility[Visibility.duplicated(subset = ['SKU'], take_last = False)==False]
+    Vb = Visibility[Visibility.duplicated(subset = ['SKU'], take_last = False)==True]
+    Vb.loc[:, ['TotalUnits','TotalCost','Qty PutAway']] = 0    
     Vc = Vb[Vb['Status']!='Draft PO']
     Visibility = Va.append(Vc, ignore_index = True)
     Visibility.replace("", np.nan, inplace = True)
