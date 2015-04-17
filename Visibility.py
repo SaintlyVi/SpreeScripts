@@ -209,3 +209,29 @@ maillist = "MailList_QS.txt"
 
 #MyFunx.send_message(doc_name, message, part, maillist)
 
+#==============================================================================
+# Production Track Weekly Stats
+#==============================================================================
+POTrack = V.drop_duplicates(subset = ['POs'])
+POTrack = POTrack.groupby(['Buyer','GLMonth','GLDay'])
+POTrack = POTrack.apply(lambda x : pd.Series(dict(POTotal = x.POs.count(),PODraft = (x['Status'] == 'Draft PO').sum(),NOTReceived = (x['Date received'].isnull()).sum(),POReceived = (x['Date received'].notnull()).sum())))
+POTrack = POTrack[['POTotal','PODraft','POReceived','NOTReceived']]
+POTrack.name = "PO Track"
+
+doc_name = 'GLTrack QuickStats '
+part = '04_Visibility\\GoLiveTrack QuickStats ' + str(today) + '.xlsx'
+message = 'Quick Stats to monitor Purchase Orders received to meet Go Live Dates'
+maillist = "MailList_Prod.txt"
+
+writer4 = ExcelWriter(part)
+POTrack.to_excel(writer4, 'Sheet1', startrow = 2)
+workbook = writer4.book
+#format workbook
+title = workbook.add_format({'bold':True, 'size':14})
+header = workbook.add_format({'size':12, 'underline':True, 'font_color':'green'})
+worksheet = writer4.sheets['Sheet1']
+worksheet.write('A1','Spree Inbound POs to make Go Live Statistics ' + str(today), title)
+#worksheet.write('A3','Simples Count (% of Simples Planned)', header)
+worksheet.set_column('A:K', 12 )
+writer4.save()
+
