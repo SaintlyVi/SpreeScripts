@@ -111,7 +111,7 @@ part = '04_Visibility\\WHTrack ' + str(today) + '.xlsx'
 message = 'Spree Stock Tracking on ' + str(today)
 maillist = "MailList_WH.txt"
 
-#MyFunx.send_message(doc_name, message, part, maillist)
+MyFunx.send_message(doc_name, message, part, maillist)
 
 #==============================================================================
 # Generate ProductTrack QuickStats
@@ -207,7 +207,7 @@ part = '04_Visibility\\ProductTrack QuickStats ' + str(today) + '.xlsx'
 message = 'Where is my stock? Quick Stats to monitor production progress'
 maillist = "MailList_QS.txt"
 
-#MyFunx.send_message(doc_name, message, part, maillist)
+MyFunx.send_message(doc_name, message, part, maillist)
 
 #==============================================================================
 # Production Track Weekly Stats
@@ -235,3 +235,4 @@ worksheet.write('A1','Spree Inbound POs to make Go Live Statistics ' + str(today
 worksheet.set_column('A:K', 12 )
 writer4.save()
 
+MyFunx.send_message(doc_name, message, part, maillist)

@@ -51,7 +51,7 @@ def send_message( doc_name, message, part, maillist ):
     mailServer.ehlo()
     mailServer.starttls()
     mailServer.ehlo()
-    password = raw_input("Enter password: ")
+    password = "spreeapp"
     mailServer.login(fromEmail, password)
     mailServer.ehlo()
     mailServer.sendmail(fromEmail, maillist, msg.as_string())
