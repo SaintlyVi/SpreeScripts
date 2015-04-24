@@ -16,18 +16,13 @@ Created on Wed Apr 08 12:12:49 2015
 ##5. Run Damages Script
 ##6. Run Stock Count Script
 #==============================================================================
-def InboundData():
+def InboundData(lastmonth, nextmonth, today):
     
     import numpy as np
     import pandas as pd
     from pandas import DataFrame
-    from datetime import date
     import gspread
-    import MyFunx
-    
-    today = date.today()
-    lastmonth = today.month - 2
-    nextmonth = today.month + 1
+    import MyFunx    
     
     #==============================================================================
     # Import from all required data sources
@@ -143,11 +138,15 @@ def InboundData():
     Visibility = pd.merge(Merge5, PutAway, on = 'SKU', how = 'left')
     Visibility.drop_duplicates(inplace = True)
     #remove duplicates that are in Draft PO status,assuming that these POs are outdated
-    Va = Visibility[Visibility.duplicated(subset = ['SKU'], take_last = False)==False]
-    Vb = Visibility[Visibility.duplicated(subset = ['SKU'], take_last = False)==True]
+    Visibility.loc[Visibility['Ref'].str.contains("sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==False,'TotalUnits'] = 0
+    
+    V0 = Visibility.loc[Visibility.TotalUnits == 0,]
+    Vn0 = Visibility.loc[Visibility.TotalUnits != 0,]
+    Va = Vn0[Vn0.duplicated(subset = ['SKU'], take_last = False)==False]
+    Vb = Vn0[Vn0.duplicated(subset = ['SKU'], take_last = False)==True]
     Vb.loc[:, ['TotalUnits','TotalCost','Qty PutAway']] = 0    
-    Vc = Vb[Vb['Status']!='Draft PO']
-    Visibility = Va.append(Vc, ignore_index = True)
+    Vc = Vb[Vb['Status']!='Draft PO'] 
+    Visibility = Va.append([Vc,V0], ignore_index = True)
     Visibility.replace("", np.nan, inplace = True)
     
     return Visibility

@@ -12,7 +12,12 @@ from datetime import date
 from openpyxl.reader.excel import load_workbook
 import MyFunx, AllData
 
-Visibility = AllData.InboundData()
+today = date.today()
+
+lastmonth = today.month - 2
+nextmonth = today.month + 1
+
+Visibility = AllData.InboundData(lastmonth, nextmonth, today)
 V1 = Visibility[Visibility['Ref'].str.contains(u"sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==False] 
 V2 = Visibility[Visibility['Ref'].str.contains(u"sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==True]
 V3 = V2.loc[V2.TotalCost > 0,:]

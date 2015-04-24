@@ -121,7 +121,7 @@ MyFunx.send_message(doc_name, message, part, maillist)
     
 #Create SampleTrack Reference doc
     
-part2 = '05_Samples\\SampleTrack .xlsx'
+part2 = '05_Samples\\SampleTrack.xlsx'
      
 writer2 = ExcelWriter(part2)
 AllSamples.to_excel(writer2,'Master', index = False)
