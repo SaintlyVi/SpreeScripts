@@ -16,7 +16,7 @@ from datetime import date, timedelta
 from pandas import ExcelWriter
 import MyFunx
 
-today = date.today() 
+today = date.today()
 
 #Retrieve data from Simplybook export
 columns = ["Date","Time","Event","Client name","Client email","Is cancelled","Record date","Additional fields"]

@@ -61,14 +61,14 @@ def InboundData(lastmonth, nextmonth, today):
     Bookd = Bookd.replace('',np.nan)
     Bookd = Bookd.dropna(subset = [u'Date booked'], thresh = 1)
     Bookd = Bookd.drop_duplicates(subset = [u'POs'], take_last = False)
-    Bookd = Bookd[Bookd.POs != np.nan]
+    Bookd = Bookd.loc[Bookd.POs != ""]
     Bookd[u'Date booked'] = pd.to_datetime(Bookd[u'Date booked'], infer_datetime_format = True)
     
     Receivd = B_R[['POs', 'Partial delivery', 'Date received']]
     Receivd = Receivd.replace('',np.nan)
     Receivd = Receivd.dropna(subset = ['Date received'], thresh = 1)
     Receivd = Receivd.drop_duplicates(subset = ['POs'], take_last = True)
-    Receivd = Receivd[Receivd.POs != np.nan]
+    Receivd = Receivd.loc[Receivd.POs != ""]
     Receivd['Date received'] = pd.to_datetime(Receivd['Date received'], infer_datetime_format = True)
     
     #Import Rolling Stock data
@@ -96,8 +96,9 @@ def InboundData(lastmonth, nextmonth, today):
     Lulu =  MyFunx.sql_import("vw_ProcurementPipeline",["ActualGoLiveDate","PlannedGoLiveDate"], pw)
     Planned = Lulu[['PlannedGoLiveDayOfWeek','PlannedGoLiveMonth','PlannedGoLiveYear','PlannedGoLiveDate','BuyerPlanName','BuyerPlanStatus','EmployeeFirstName','PlannedUnitCostExclTax','PlannedTotalQuantity','PlannedTotalCostExclTax','SimpleSKU','SimpleName','ConfigName','ConfigSKU','ProcurementStatus','ProcurementProductCategoryL3','ActualGoLiveDate','Supplier','Designer','EANNumber','BarCode']]
     #Merge EAN, BarCode information with SKU
+    Planned.loc[Planned.EANNumber == "",'EANNumber'] = None
     SKU = Planned['EANNumber'].combine_first(Planned['SimpleSKU'])
-    Planned['SKU'] = Planned['BarCode'].combine_first(SKU)
+    Planned.loc[:,'SKU'] = Planned['BarCode'].combine_first(SKU)
     Planned.drop_duplicates(subset = ['SKU','PlannedGoLiveMonth'], inplace = True, take_last = True)
     if lastmonth == 11 | 12:
         Planned = Planned[((Planned.PlannedGoLiveMonth >= lastmonth) & (Planned.PlannedGoLiveYear == today.year)) | ((Planned.PlannedGoLiveMonth <= nextmonth) & (Planned.PlannedGoLiveYear == today.year))]
@@ -138,8 +139,9 @@ def InboundData(lastmonth, nextmonth, today):
     Visibility = pd.merge(Merge5, PutAway, on = 'SKU', how = 'left')
     Visibility.drop_duplicates(inplace = True)
     #remove duplicates that are in Draft PO status,assuming that these POs are outdated
-    Visibility.loc[Visibility['Ref'].str.contains("sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==False,'TotalUnits'] = 0
-    
+    Visibility.loc[Visibility['Ref'].str.contains("sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==True,['TotalUnits','TotalCost','Qty PutAway']] = 0
+    Visibility['Oversupply'] = 0
+    Visibility.loc[Visibility['Ref'].str.contains("OS|Os|OVERSUPPLY")==True, 'Oversupply'] = Visibility['BP Qty']    
     V0 = Visibility.loc[Visibility.TotalUnits == 0,]
     Vn0 = Visibility.loc[Visibility.TotalUnits != 0,]
     Va = Vn0[Vn0.duplicated(subset = ['SKU'], take_last = False)==False]

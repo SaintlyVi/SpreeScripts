@@ -31,5 +31,15 @@ Visibility = AllData.InboundData(lastmonth, nextmonth, today)
 Visibility['GLiso'] = Visibility['GLDate'].apply(lambda x: list(x.isocalendar())[:-1] + [3])
 Visibility['GLgreg'] = Visibility['GLiso'].apply(lambda x: iso_to_gregorian(x[0],x[1],x[2]))
 
-VConf = Visibility.drop_duplicates(subset = ['ConfigSKU','POs'])
+Visiblity = Visibility.loc[Visibility.TotalUnits > 0,]
+VConf = Visibility.drop_duplicates(subset = ['ConfigSKU'])
+
 GLTrack = VConf.groupby(['GLgreg'])
+ConfigTrack = GLTrack.agg({'ConfigSKU':'count','POs':'count','Date booked':'count','Date received':'count','LastQCed':'count','ActualGoLiveDate':'count'})
+ConfigTrack = ConfigTrack.rename(columns={'ConfigSKU':'Planned','POs':'OnBP','Date received':'Received','LastQCed':'QCed','Date booked':'Booked','ActualGoLiveDate':'Live'})
+ConfigTrack = ConfigTrack[['Planned','OnBP','Booked','Received','QCed','Live']]
+
+GLMonth = VConf.groupby(['GLMonth'])
+MonthTrack = GLMonth.agg({'ConfigSKU':'count','POs':'count','Date booked':'count','Date received':'count','LastQCed':'count','ActualGoLiveDate':'count'})
+MonthTrack = MonthTrack.rename(columns={'ConfigSKU':'Planned','POs':'OnBP','Date received':'Received','LastQCed':'QCed','Date booked':'Booked','ActualGoLiveDate':'Live'})
+MonthTrack = MonthTrack[['Planned','OnBP','Booked','Received','QCed','Live']]

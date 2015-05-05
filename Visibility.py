@@ -14,28 +14,20 @@ import MyFunx, AllData
 
 today = date.today()
 
-lastmonth = today.month - 2
+lastmonth = today.month - 3
 nextmonth = today.month + 1
 
 Visibility = AllData.InboundData(lastmonth, nextmonth, today)
-V1 = Visibility[Visibility['Ref'].str.contains(u"sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==False] 
-V2 = Visibility[Visibility['Ref'].str.contains(u"sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==True]
-V3 = V2.loc[V2.TotalCost > 0,:]
-V4 = Visibility[Visibility['Ref'].isnull()==True]
-Vis = V1.append([V3,V4], ignore_index=True)
 
 Samples = pd.ExcelFile(u'05_Samples\\SampleTrack.xlsx').parse(u'Master', skiprows = 0, index = None, encoding='utf-8')
 Samples = Samples[[u'SKU',u'03_SampleRoom_TO_studio']]
 Samples.loc[Samples[u'03_SampleRoom_TO_studio'].notnull(),u'SampleCount'] = 1
 
-V = pd.merge(Vis, Samples, on = u'SKU', how = u'left', sort = False )
+Vis = pd.merge(Visibility, Samples, on = u'SKU', how = u'left', sort = False )
 
-V = V.sort(['Date received','Date booked','POs'], inplace = False, na_position = 'first')
-V = V[['GLYear','GLMonth','GLDay','Buyer', 'UnitCost','TotalUnits','TotalCost','SKU','SimpleName','ProcurementStatus','Category','Supplier','DeliveryDue','POs','BP Qty','Ref','Status','Date booked','Partial delivery','Date received','LastQCed','Qty Counted','Qty Damaged','SampleCount','OTDLastReceived','Qty Received','Qty PutAway','ActualGoLiveDate']]
+V = Vis.sort(['Date received','Date booked','POs'], inplace = False, na_position = 'first')
+V = V[['GLYear','GLMonth','GLDay','Buyer', 'UnitCost','TotalUnits','TotalCost','SKU','SimpleName','ProcurementStatus','Category','Supplier','DeliveryDue','POs','BP Qty','Ref','Status','Date booked','Partial delivery','Date received','LastQCed','Qty Counted','Qty Damaged','SampleCount','Oversupply','OTDLastReceived','Qty Received','Qty PutAway','ActualGoLiveDate']]
  
-OS = Visibility[Visibility['Ref'].str.contains(u"OS|Os|OVERSUPPLY")==True]
-OS = OS[['GLYear','GLMonth','GLDay','Buyer', 'UnitCost','TotalUnits','TotalCost','SKU','SimpleName','Category','Supplier','POs','Ref','Status','Qty Damaged','OTDLastReceived','Qty Received']]
-
 today = date.today()
 
 #==============================================================================
@@ -67,9 +59,6 @@ for b in Buyers:
     workbook = writer1.book
     worksheet = writer1.sheets[b]
     format()
-OS.to_excel(writer1, u'OS', index = False, encoding = 'utf-8' )
-workbook = writer1.book
-worksheet = writer1.sheets['OS']
 writer1.save()
 
 doc_name = u'Visibility Report '
@@ -77,7 +66,7 @@ part = u'04_Visibility\\Visibility ' + str(today) + '.xlsx'
 message = u'Visibility Report' + str(today)
 maillist = "MailList_Merch.txt"
 
-#MyFunx.send_message(doc_name, message, part, maillist)
+MyFunx.send_message(doc_name, message, part, maillist)
 
 #==============================================================================
 # Generate WHTrack Output Data
@@ -122,7 +111,7 @@ MyFunx.send_message(doc_name, message, part, maillist)
 # Generate ProductTrack QuickStats
 #==============================================================================
 
-#V = Visibility[Visibility['Ref'].str.contains(u"sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==False] 
+V = Vis[(Vis['Ref'].str.contains(u"sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud|not OK")==False) | (Vis['Ref'].isnull()==True)] 
 
 #ProductTrack
 SimplesCount = V.groupby('GLMonth').agg({'TotalUnits':'count','POs': 'count',\
@@ -133,17 +122,29 @@ SimplesCount.rename(columns={'TotalUnits':'Simples Planned','POs':'Simples on BP
 'Date received':'Simples received UNCHECKED','Qty Counted':'Simples QCed','Qty Received':'Simples taken in by OTD','Qty PutAway':'Simples in OTD WH'}, inplace = True)
 SimplesCount.name = "Simples Count"
 
-UnitsCount = V.groupby('GLMonth').agg({'TotalUnits':'sum','Qty Counted':'sum', 'Qty Damaged':'sum','Qty Received':'sum','Qty PutAway':'sum'})
+UnitsCount = V.groupby('GLMonth').agg({'TotalUnits':'sum','Qty Counted':'sum','SampleCount':'sum','Qty Damaged':'sum','Qty Received':'sum','Qty PutAway':'sum'})
 UnitsCount.sort_index(ascending = True, inplace = True)
-UnitsCount = UnitsCount[['TotalUnits','Qty Counted','Qty Damaged','Qty Received','Qty PutAway']]
+UnitsCount = UnitsCount[['TotalUnits','Qty Counted','SampleCount','Qty Damaged','Qty Received','Qty PutAway']]
 UnitsCount.rename(columns={'TotalUnits':'Units Planned','Qty Counted':'Units QCed','Qty Received':'Units taken in by OTD','Qty PutAway':'Units in OTD WH'}, inplace = True)
 UnitsCount.name = "Units Count"
 
-POCount = V.drop_duplicates(subset = ['POs'])
-POCount = POCount.groupby('GLMonth').agg({'POs':'count', 'Date booked':'count','Date received':'count','LastQCed':'count', 'OTDLastReceived':'count'})
-POCount.sort_index(ascending = True, inplace = True)
-POCount = POCount[['POs', 'Date booked', 'Date received','LastQCed','OTDLastReceived']]
-POCount.rename(columns={'POs':'POs on BP','Date booked':'POs booked','Date received':'POs received UNCHECKED','LastQCed':'POs QCed','OTDLastReceived':'POs in WH'}, inplace = True)
+POCount = V.dropna(subset = ['POs']).sort(columns = ['LastQCed','OTDLastReceived'], na_position = 'last')
+POCount = POCount.drop_duplicates(subset = ['POs','LastQCed'])
+POCount['duplicate'] = POCount.duplicated(subset = 'POs')
+POCount.loc[POCount['LastQCed'].notnull(), 'atWH'] = 1
+POCount = POCount.groupby('GLMonth')
+
+POCount = POCount.apply(lambda x : pd.Series(dict(
+POTotal = len(x.loc[x.duplicate==False]), 
+POBooked = len(x.loc[(x.duplicate==False) & x['Date booked'].notnull()]), 
+POReceived = len(x.loc[(x.duplicate==False) & x['Date received'].notnull()]),
+PONotRec = len(x.loc[(x.duplicate==False) & x['Date received'].isnull()]),
+Partial = len(x.loc[(x.duplicate==True) & x['Date received'].isnull()]), 
+LastQCed = len(x.loc[(x.duplicate==False) & x['LastQCed'].notnull()]), 
+OTDLastReceived = len(x.loc[(x.duplicate==False) & x['OTDLastReceived'].notnull()]))))
+
+POCount = POCount[['POTotal', 'POBooked', 'POReceived','PONotRec','Partial','LastQCed','OTDLastReceived']]
+POCount.rename(columns={'POTotal':'POs on BP','POBooked':'POs booked','POReceived':'POs received UNCHECKED','Partial':'Partial delivery','LastQCed':'POs QCed','OTDLastReceived':'POs in WH'}, inplace = True)
 POCount = (POCount.T/list(POCount['POs on BP'])).T
 POCount.name = "PO Count"
 
@@ -152,18 +153,18 @@ V['TotalCost'] = V['UnitCost']*V['TotalUnits']
 V['NoBP'] = V['Status'].isnull() #SKUs not on Brightpearl
 V['NBND'] = V['Date received'].isnull() & V['Date booked'].isnull() #SKUs not booked not delivered
 V['ND'] = V['Date received'].isnull() #SKUs not delivered
-V['NQC'] = V['LastQCed'].isnull() #SKUs not QCed
+V['Partial'] = V['LastQCed'].isnull() #SKUs not QCed
 V['NOTD'] = V['OTDLastReceived'].isnull() #SKUs not received by OTD
 
 #Cost of SKUs not processed / WorkingCapital
 NoBP = V[V['NoBP']==True].groupby(V['GLMonth']).sum()['TotalCost'] #Cost of SKUs not on BP / month
 NBND = V[V['NBND']==True].groupby(V['GLMonth']).sum()['TotalCost'] - NoBP #Cost of SKUs not booked not delivered
 BND = V[V['ND']==True].groupby(V['GLMonth']).sum()['TotalCost'] - (NoBP + NBND) #Cost of SKUs not delivered / month
-NQC = V[V['NQC']==True].groupby(V['GLMonth']).sum()['TotalCost'] - (NoBP + NBND + BND)  #Cost of SKUs not QCed
-NOTD = V[V['NOTD']==True].groupby(V['GLMonth']).sum()['TotalCost'] - (NoBP + NBND + BND + NQC)#Cost of SKUs not received by OTD
+Partial = V[V['Partial']==True].groupby(V['GLMonth']).sum()['TotalCost'] - (NoBP + NBND + BND)  #Cost of SKUs not QCed
+#NOTD = V[V['NOTD']==True].groupby(V['GLMonth']).sum()['TotalCost'] - (NoBP + NBND + BND + Partial)#Cost of SKUs not received by OTD
 
-idx = ['Not on Brightpearl', 'Not Booked Not Delivered', 'Booked Not Delivered', 'Not QCed', 'OTD Not Received']
-WorkingCapital = pd.DataFrame(data = [NoBP, NBND, BND, NQC, NOTD], index = idx).T
+idx = ['Not on Brightpearl', 'Not Booked Not Delivered', 'Booked Not Delivered', 'Partial Delivery']
+WorkingCapital = pd.DataFrame(data = [NoBP, NBND, BND, Partial], index = idx).T
 WorkingCapital.applymap(lambda x: "R{:.8n}".format(x))
 WorkingCapital.name = "Working Capital"
 
@@ -194,13 +195,13 @@ cellsA = [ws['E4'],ws['E11'],ws['G4'],ws['D18'],ws['C25'],ws['D25']]
 for cell in cellsA:
     cell.style.alignment.wrap_text = True 
     
-cellsB = ws['B20':'F23']
+cellsB = ws['B20':'F24']
 for row in cellsB:
     for cell in row:
         cell.style.number_format.format_code = '0%'
         cell.style.alignment.horizontal = 'center'
 
-cellsC = ws['B27':'F30']
+cellsC = ws['B27':'F31']
 for row in cellsC:
     for cell in row:
         cell.style.number_format.format_code = '"R "#,##0.00'
