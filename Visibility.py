@@ -8,7 +8,7 @@ Created on Tue Dec 02 12:53:35 2014
 
 import pandas as pd
 from pandas import ExcelWriter
-from datetime import date
+from datetime import date, timedelta
 from openpyxl.reader.excel import load_workbook
 import MyFunx, AllData
 
@@ -42,10 +42,10 @@ def format():
     worksheet.set_column('J:M', 20 )
     worksheet.set_column('N:O', 8 )
     worksheet.set_column('P:U', 18 )
-    worksheet.set_column('V:X', 12 )
-    worksheet.set_column('Y:Y', 18 )
-    worksheet.set_column('Z:AA', 12 )
-    worksheet.set_column('AB:AB', 18 )
+    worksheet.set_column('V:Y', 12 )
+    worksheet.set_column('Z:Z', 18 )
+    worksheet.set_column('AA:AB', 12 )
+    worksheet.set_column('AC:AC', 18 )
 
 writer1 = ExcelWriter('04_Visibility\\Visibility ' + str(today) + '.xlsx')
 V.to_excel(writer1, 'MASTER', index = False, encoding = 'utf-8' )   
@@ -111,16 +111,42 @@ MyFunx.send_message(doc_name, message, part, maillist)
 # Generate ProductTrack QuickStats
 #==============================================================================
 
+#ProductTrack by Config 
+
 V = Vis[(Vis['Ref'].str.contains(u"sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud|not OK")==False) | (Vis['Ref'].isnull()==True)] 
 
-#ProductTrack
-SimplesCount = V.groupby('GLMonth').agg({'TotalUnits':'count','POs': 'count',\
-'Date booked':'count', 'Date received':'count','Qty Counted':'count', 'Qty Received':'count','Qty PutAway':'count'})
-SimplesCount.sort_index(ascending = True, inplace = True)
-SimplesCount = SimplesCount[['TotalUnits','POs', 'Date booked', 'Date received','Qty Counted','Qty Received','Qty PutAway']]
-SimplesCount.rename(columns={'TotalUnits':'Simples Planned','POs':'Simples on BP','Date booked':'Simples booked',\
-'Date received':'Simples received UNCHECKED','Qty Counted':'Simples QCed','Qty Received':'Simples taken in by OTD','Qty PutAway':'Simples in OTD WH'}, inplace = True)
-SimplesCount.name = "Simples Count"
+def iso_year_start(iso_year):
+    "The gregorian calendar date of the first day of the given ISO year"
+    fourth_jan = date(iso_year, 1, 4)
+    delta = timedelta(fourth_jan.isoweekday()-1)
+    return fourth_jan - delta 
+
+def iso_to_gregorian(iso_year, iso_week, iso_day):
+    "Gregorian calendar date for the given ISO year, week and day"
+    year_start = iso_year_start(iso_year)
+    return year_start + timedelta(days=iso_day-1, weeks=iso_week-1)
+    
+V['GLiso'] = V['GLDate'].apply(lambda x: list(x.isocalendar())[:-1] + [3])
+V['GLgreg'] = V['GLiso'].apply(lambda x: iso_to_gregorian(x[0],x[1],x[2]))
+
+VConf = Visibility.drop_duplicates(subset = ['ConfigSKU','LastQCed'])
+VConf.sort(columns = 'LastQCed', na_position = 'last', inplace = True)
+VConf['duplicate'] = VConf.duplicated(subset = 'POs', take_last = False)
+VConf.loc[VConf['LastQCed'].notnull(), 'atWH'] = 1
+VConf = VConf.drop_duplicates(subset = ['POs','atWH'])
+
+GLMonth = VConf.groupby('GLMonth')
+MonthTrack = GLMonth.apply(lambda x : pd.Series(dict(
+ConfigTotal = len(x.loc[x.duplicate==False]),
+ConfigonBP = len(x.loc[(x.duplicate==False) & x.POs.notnull()]),
+ConfigBooked = len(x.loc[(x.duplicate==False) & x['Date booked'].notnull()]),
+ConfigRec = len(x.loc[(x.duplicate==False) & x['Date received'].notnull()]),
+ConfigParDel = len(x.loc[(x.duplicate==True) & x['LastQCed'].isnull()]),
+ConfigQCd = len(x.loc[(x.duplicate==False) & x['LastQCed'].notnull()]),
+ConfigLive = len(x.loc[(x.duplicate==False) & x['ActualGoLiveDate'].notnull()]),
+ConfigNotLive = len(x.loc[(x.duplicate==False) & x['ActualGoLiveDate'].isnull()]))))
+MonthTrack = MonthTrack.rename(columns={'ConfigTotal':'Planned','ConfigonBP':'OnBP','ConfigRec':'Received','ConfigQCd':'QCed','ConfigBooked':'Booked','ConfigLive':'Live','ConfigNotLive':'Not Live','ConfigParDel':'Partial delivery'})
+MonthTrack = MonthTrack[['Planned','OnBP','Booked','Received','QCed','Partial delivery','Live','Not Live']]
 
 UnitsCount = V.groupby('GLMonth').agg({'TotalUnits':'sum','Qty Counted':'sum','SampleCount':'sum','Qty Damaged':'sum','Qty Received':'sum','Qty PutAway':'sum'})
 UnitsCount.sort_index(ascending = True, inplace = True)
@@ -128,25 +154,28 @@ UnitsCount = UnitsCount[['TotalUnits','Qty Counted','SampleCount','Qty Damaged',
 UnitsCount.rename(columns={'TotalUnits':'Units Planned','Qty Counted':'Units QCed','Qty Received':'Units taken in by OTD','Qty PutAway':'Units in OTD WH'}, inplace = True)
 UnitsCount.name = "Units Count"
 
-POCount = V.dropna(subset = ['POs']).sort(columns = ['LastQCed','OTDLastReceived'], na_position = 'last')
+#Stats by Purchase Order
+POCount = V.dropna(subset = ['POs'])
 POCount = POCount.drop_duplicates(subset = ['POs','LastQCed'])
-POCount['duplicate'] = POCount.duplicated(subset = 'POs')
+POCount.sort(columns = 'LastQCed', na_position = 'last', inplace = True)
+POCount['duplicate'] = POCount.duplicated(subset = 'POs', take_last = False)
 POCount.loc[POCount['LastQCed'].notnull(), 'atWH'] = 1
-POCount = POCount.groupby('GLMonth')
+POCount = POCount.drop_duplicates(subset = ['POs','atWH'])
 
-POCount = POCount.apply(lambda x : pd.Series(dict(
+POC = POCount.groupby('GLMonth')
+POC = POC.apply(lambda x : pd.Series(dict(
 POTotal = len(x.loc[x.duplicate==False]), 
 POBooked = len(x.loc[(x.duplicate==False) & x['Date booked'].notnull()]), 
 POReceived = len(x.loc[(x.duplicate==False) & x['Date received'].notnull()]),
 PONotRec = len(x.loc[(x.duplicate==False) & x['Date received'].isnull()]),
-Partial = len(x.loc[(x.duplicate==True) & x['Date received'].isnull()]), 
+Partial = len(x.loc[(x.duplicate==True) & x['LastQCed'].isnull()]), 
 LastQCed = len(x.loc[(x.duplicate==False) & x['LastQCed'].notnull()]), 
 OTDLastReceived = len(x.loc[(x.duplicate==False) & x['OTDLastReceived'].notnull()]))))
 
-POCount = POCount[['POTotal', 'POBooked', 'POReceived','PONotRec','Partial','LastQCed','OTDLastReceived']]
-POCount.rename(columns={'POTotal':'POs on BP','POBooked':'POs booked','POReceived':'POs received UNCHECKED','Partial':'Partial delivery','LastQCed':'POs QCed','OTDLastReceived':'POs in WH'}, inplace = True)
-POCount = (POCount.T/list(POCount['POs on BP'])).T
-POCount.name = "PO Count"
+POC = POC[['POTotal', 'POBooked', 'POReceived','PONotRec','Partial','LastQCed','OTDLastReceived']]
+POC.rename(columns={'POTotal':'POs on BP','POBooked':'POs booked','POReceived':'POs received UNCHECKED','Partial':'Partial delivery','LastQCed':'POs QCed','OTDLastReceived':'POs in WH'}, inplace = True)
+POC = (POC.T/list(POC['POs on BP'])).T
+POC.name = "PO Count"
 
 #SKUs not processed
 V['TotalCost'] = V['UnitCost']*V['TotalUnits']
@@ -171,7 +200,7 @@ WorkingCapital.name = "Working Capital"
 writer3 = ExcelWriter('04_Visibility\\ProductTrack QuickStats ' + str(today) + '.xlsx')
 SimplesCount.to_excel(writer3, 'Sheet1', startrow = 3)
 UnitsCount.to_excel(writer3, 'Sheet1', startrow = 10)
-POCount.to_excel(writer3, 'Sheet1', startrow = 17)
+POC.to_excel(writer3, 'Sheet1', startrow = 17)
 WorkingCapital.to_excel(writer3, 'Sheet1', startrow = 24)
 workbook = writer3.book
 #format workbook
@@ -218,11 +247,34 @@ MyFunx.send_message(doc_name, message, part, maillist)
 #==============================================================================
 # Production Track Weekly Stats
 #==============================================================================
-POTrack = V.drop_duplicates(subset = ['POs'])
-POTrack = POTrack.groupby(['Buyer','GLMonth','GLDay'])
-POTrack = POTrack.apply(lambda x : pd.Series(dict(POTotal = x.POs.count(),PODraft = (x['Status'] == 'Draft PO').sum(),NOTReceived = (x['Date received'].isnull()).sum(),POReceived = (x['Date received'].notnull()).sum())))
-POTrack = POTrack[['POTotal','PODraft','POReceived','NOTReceived']]
-POTrack.name = "PO Track"
+
+GLTrack = VConf.groupby(['GLgreg'])
+ConfigTrack = GLTrack.agg({'ConfigSKU':'count','POs':'count','Date booked':'count','Date received':'count','LastQCed':'count','ActualGoLiveDate':'count'})
+ConfigTrack = ConfigTrack.rename(columns={'ConfigSKU':'Planned','POs':'OnBP','Date received':'Received','LastQCed':'QCed','Date booked':'Booked','ActualGoLiveDate':'Live'})
+ConfigTrack = ConfigTrack[['Planned','OnBP','Booked','Received','QCed','Live']]
+
+POTrack = V.dropna(subset = ['POs'])
+POTrack = POTrack.drop_duplicates(subset = ['POs','LastQCed'])
+POTrack.sort(columns = 'LastQCed', na_position = 'last', inplace = True)
+POTrack['duplicate'] = POTrack.duplicated(subset = 'POs', take_last = False)
+
+POsum = POTrack.groupby(['GLMonth','GLDay'])
+POsum = POsum.apply(lambda x : pd.Series(dict(
+POsum_Total = len(x.loc[x.duplicate==False]),
+POsum_Draft = len(x.loc[(x.duplicate==False) & (x['Status'] == 'Draft PO')]),
+sumNOT_Received = len(x.loc[(x.duplicate==False) & x['Date received'].isnull()]),
+POsum_Received = len(x.loc[(x.duplicate==False) & x['Date received'].notnull()]))))
+POsum = POsum[['POsum_Total','POsum_Draft','POsum_Received','sumNOT_Received']]
+POsum.name = "PO Track Summary"
+
+POT = POTrack.groupby(['Buyer','GLMonth','GLDay'])
+POT = POT.apply(lambda x : pd.Series(dict(
+PO_Total = len(x.loc[x.duplicate==False]),
+PO_Draft = len(x.loc[(x.duplicate==False) & (x['Status'] == 'Draft PO')]),
+NOT_Received = len(x.loc[(x.duplicate==False) & x['Date received'].isnull()]),
+PO_Received = len(x.loc[(x.duplicate==False) & x['Date received'].notnull()]))))
+POT = POT[['PO_Total','PO_Draft','PO_Received','NOT_Received']]
+POT.name = "PO Track"
 
 doc_name = 'GLTrack QuickStats '
 part = '04_Visibility\\GoLiveTrack QuickStats ' + str(today) + '.xlsx'
@@ -230,15 +282,19 @@ message = 'Quick Stats to monitor Purchase Orders received to meet Go Live Dates
 maillist = "MailList_Prod.txt"
 
 writer4 = ExcelWriter(part)
-POTrack.to_excel(writer4, 'Sheet1', startrow = 2)
+POsum.to_excel(writer4, 'GLperPO Summary', startrow = 2)
+POT.to_excel(writer4, 'GLperPO per Buyer', startrow = 2)
 workbook = writer4.book
 #format workbook
 title = workbook.add_format({'bold':True, 'size':14})
 header = workbook.add_format({'size':12, 'underline':True, 'font_color':'green'})
-worksheet = writer4.sheets['Sheet1']
+worksheet = writer4.sheets['GLTrack per Buyer']
 worksheet.write('A1','Spree Inbound POs to make Go Live Statistics ' + str(today), title)
-#worksheet.write('A3','Simples Count (% of Simples Planned)', header)
 worksheet.set_column('A:K', 12 )
+
+ws = writer4.sheets['GLTrack Summary']
+ws.write('A1','Spree Inbound POs to make Go Live Statistics ' + str(today), title)
+ws.set_column('A:K', 12 )
 writer4.save()
 
 MyFunx.send_message(doc_name, message, part, maillist)

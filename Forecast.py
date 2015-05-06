@@ -30,7 +30,7 @@ future = today.month + 2
 lastmonth = past
 nextmonth = future
 
-Visibility = AllData.InboundData(lastmonth, nextmonth)
+Visibility = AllData.InboundData(lastmonth, nextmonth, today)
 V1 = Visibility[Visibility['Ref'].str.contains("sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==False] 
 V2 = Visibility[Visibility['Ref'].isnull()==True]
 V = V1.append(V2, ignore_index=True)

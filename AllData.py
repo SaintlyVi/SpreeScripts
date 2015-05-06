@@ -32,8 +32,11 @@ def InboundData(lastmonth, nextmonth, today):
     BPdetail = pd.read_csv('BPdetail.csv', header = 0, usecols = columns, encoding = 'iso-8859-1')
     BPdetail['Order ID'] = BPdetail['Order ID'].map(lambda x: unicode(x))
     BPdetail.rename(columns={'Order ID': u'POs', 'Quantity': u'BP Qty'}, inplace=True)
-    BPdet = BPdetail[BPdetail['Status'].str.contains('Cancel PO')==False] 
+    BPdet = BPdetail[BPdetail['Status'].str.contains('Cancel PO')==False]
     
+    BPdet = pd.pivot_table(BPdet, values = [u'BP Qty'], index = [u'SKU',u'POs',u'Ref',u'Status'], aggfunc=np.sum)
+    BPdet.reset_index(inplace=True)
+       
     CancelledPOs = BPdetail[BPdetail['Status']=='Cancel PO']
     CancelledPOs = CancelledPOs.groupby('POs').agg({'SKU':'count'})
     
@@ -106,7 +109,7 @@ def InboundData(lastmonth, nextmonth, today):
         Planned = Planned[((Planned.PlannedGoLiveMonth >= lastmonth) & (Planned.PlannedGoLiveYear == today.year)) & ((Planned.PlannedGoLiveMonth <= nextmonth) & (Planned.PlannedGoLiveYear == today.year))]
     Planned.rename(columns={'PlannedGoLiveDayOfWeek':'GLDay','PlannedGoLiveMonth':'GLMonth','PlannedGoLiveYear':'GLYear','PlannedGoLiveDate':'GLDate', 'EmployeeFirstName':'Buyer','ProcurementProductCategoryL3':'Category', 'PlannedUnitCostExclTax':'UnitCost','PlannedTotalQuantity':'TotalUnits','PlannedTotalCostExclTax':'TotalCost'}, inplace=True)
     Planned = Planned[Planned['TotalCost'] > 0]
-    Planned.loc[Planned.ProcurementStatus == 'Deleted', ['TotalUnits','TotalCost']] = 0
+    Planned.loc[Planned.ProcurementStatus == 'Deleted', ['TotalUnits','TotalCost']] = ""
     
     #Import Dynaman IBOI1003 Inbound Order Received Messages
     ## table = "vw_WarehouseInboundItemsReceived"
@@ -139,14 +142,14 @@ def InboundData(lastmonth, nextmonth, today):
     Visibility = pd.merge(Merge5, PutAway, on = 'SKU', how = 'left')
     Visibility.drop_duplicates(inplace = True)
     #remove duplicates that are in Draft PO status,assuming that these POs are outdated
-    Visibility.loc[Visibility['Ref'].str.contains("sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==True,['TotalUnits','TotalCost','Qty PutAway']] = 0
-    Visibility['Oversupply'] = 0
+    Visibility.loc[Visibility['Ref'].str.contains("sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==True,['TotalUnits','TotalCost','Qty PutAway']] = ""
+    Visibility['Oversupply'] = ""
     Visibility.loc[Visibility['Ref'].str.contains("OS|Os|OVERSUPPLY")==True, 'Oversupply'] = Visibility['BP Qty']    
-    V0 = Visibility.loc[Visibility.TotalUnits == 0,]
-    Vn0 = Visibility.loc[Visibility.TotalUnits != 0,]
+    V0 = Visibility.loc[Visibility.TotalUnits == "",]
+    Vn0 = Visibility.loc[Visibility.TotalUnits != "",]
     Va = Vn0[Vn0.duplicated(subset = ['SKU'], take_last = False)==False]
     Vb = Vn0[Vn0.duplicated(subset = ['SKU'], take_last = False)==True]
-    Vb.loc[:, ['TotalUnits','TotalCost','Qty PutAway']] = 0    
+    Vb.loc[:, ['TotalUnits','TotalCost','Qty PutAway']] = ""    
     Vc = Vb[Vb['Status']!='Draft PO'] 
     Visibility = Va.append([Vc,V0], ignore_index = True)
     Visibility.replace("", np.nan, inplace = True)
