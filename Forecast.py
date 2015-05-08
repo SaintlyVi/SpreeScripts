@@ -56,9 +56,9 @@ received.columns = 'Qty Received', 'Qty Planned'
 
 writer = ExcelWriter("07_Forecast\\Forecast " + str(today.year) + "-" + str(today.month) + ".xlsx")
 received.to_excel(writer, 'Summary', index = True)
-table.to_excel(writer, 'Config Plan', index = True)
+table.to_excel(writer, 'Unit Plan', index = True)
 workbook = writer.book
-wksht = writer.sheets['Config Plan']
+wksht = writer.sheets['Unit Plan']
 wksht.set_column('A:A', 25)
 wksht.set_column('B:V', 10)
 ws = writer.sheets['Summary']

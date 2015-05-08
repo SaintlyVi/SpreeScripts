@@ -198,7 +198,7 @@ WorkingCapital.applymap(lambda x: "R{:.8n}".format(x))
 WorkingCapital.name = "Working Capital"
 
 writer3 = ExcelWriter('04_Visibility\\ProductTrack QuickStats ' + str(today) + '.xlsx')
-SimplesCount.to_excel(writer3, 'Sheet1', startrow = 3)
+MonthTrack.to_excel(writer3, 'Sheet1', startrow = 3)
 UnitsCount.to_excel(writer3, 'Sheet1', startrow = 10)
 POC.to_excel(writer3, 'Sheet1', startrow = 17)
 WorkingCapital.to_excel(writer3, 'Sheet1', startrow = 24)
@@ -208,7 +208,7 @@ title = workbook.add_format({'bold':True, 'size':14})
 header = workbook.add_format({'size':12, 'underline':True, 'font_color':'green'})
 worksheet = writer3.sheets['Sheet1']
 worksheet.write('A1','Spree Stock Tracking Statistics ' + str(today), title)
-worksheet.write('A3','Simples Count (% of Simples Planned)', header)
+worksheet.write('A3','Config Count (Number of Configs Planned)', header)
 worksheet.write('A11','Units Count', header)
 worksheet.write('A18','PO Count', header)
 worksheet.write('A25','Working Capital (ZAR loss due to status not achieved)', header)

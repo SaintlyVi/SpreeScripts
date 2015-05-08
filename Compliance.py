@@ -10,14 +10,17 @@ from pandas import ExcelWriter
 from datetime import date
 import AllData# , MyFunx
 
-Visibility = AllData.InboundData()
+today = date.today()
+
+lastmonth = today.month - 3
+nextmonth = today.month + 1
+
+Visibility = AllData.InboundData(lastmonth, nextmonth, today)
 V1 = Visibility[Visibility['Ref'].str.contains("sample|Sample|SAMPLE|samples|Samples|OS|Os|OVERSUPPLY|fraud")==False] 
 V2 = Visibility[Visibility['Ref'].isnull()==True]
 V = V1.append(V2, ignore_index=True)
 V = V.sort(['Date received','Date booked','POs'], inplace = False, na_position = 'first')
 V = V[['GLYear','GLMonth','GLDay','Buyer', 'UnitCost','TotalUnits','TotalCost','SKU','SimpleName','ProcurementStatus','Category','Supplier','DeliveryDue','POs','BP Qty','Ref','Status','Date booked','Partial delivery','Date received','LastQCed','Qty Counted','Qty Damaged','OTDLastReceived','Qty Received','Qty PutAway','ActualGoLiveDate']]
-
-today = date.today()
 
 #==============================================================================
 # Generate Supplier Compliance

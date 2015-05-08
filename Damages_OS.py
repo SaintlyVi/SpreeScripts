@@ -11,12 +11,12 @@ Created on Fri Nov 21 14:40:29 2014
 
 import pandas as pd
 from pandas import DataFrame
-from datetime import date
+from datetime import date, timedelta
 import gspread
 from pandas import ExcelWriter
 import MyFunx
 
-today = date.today()
+today = date.today() - timedelta(1)
 
 #Reading from QCDamages google doc
 c = gspread.Client(auth=('spreewarehouse@gmail.com', 'spreeapp'))

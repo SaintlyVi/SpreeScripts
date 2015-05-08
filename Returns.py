@@ -18,8 +18,24 @@ CourierReturns = Returns.loc[Returns['Charge Out'] > 0] #remove multiple parcels
 print CourierReturns[['Charge Out','Delay']].describe()
 print 'Total Charge Out Courier Collections ' + str(CourierReturns['Charge Out'].sum())
 
+#Post Office Returns
 Returns['PO Charge'] = np.nan
-Returns.loc[Returns['Chargeable Mass'] <= 1000, 'PO Charge'] = 22.80 + 6.15
-Returns.loc[Returns['Chargeable Mass'] > 1000, 'PO Charge'] = 37.20 + 5*np.ceil(Returns['Chargeable Mass']/1000.0) + 6.15
+Returns.loc[Returns['Chargeable Mass'] <= 1000, 'PO Charge'] = 40.90 + 6.75
+Returns.loc[Returns['Chargeable Mass'] > 1000, 'PO Charge'] = 40.90 + 5.50*np.ceil(Returns['Chargeable Mass']/1000.0) + 6.75
 print Returns[['PO Charge']].describe()
 print 'Total equivalent charge out Post Office drop-offs ' + str(Returns['PO Charge'].sum())
+
+#PostNet Returns
+Returns['PNet Charge'] = np.nan
+#Main Centre under 2kg
+Returns.loc[(Returns['Chargeable Mass'] <= 2000) & (Returns['Zone'].isin(['Main Centre','Local','Main Township','Local Township'])), 'PNet Charge'] = 54.57
+#Regional under 2kg
+Returns.loc[(Returns['Chargeable Mass'] <= 2000) & (~Returns['Zone'].isin(['Main Centre','Local','Main Township','Local Township'])), 'PNet Charge'] = 81.43
+#Main Centre over 2kg
+Returns.loc[(Returns['Chargeable Mass'] > 2000) & (Returns['Zone'].isin(['Main Centre','Local','Main Township','Local Township'])), 'PNet Charge'] = 54.57 + 4.95*np.ceil(Returns['Chargeable Mass']/1000.0)
+#Regional over 2kg
+Returns.loc[(Returns['Chargeable Mass'] > 2000) & (~Returns['Zone'].isin(['Main Centre','Local','Main Township','Local Township'])), 'PNet Charge'] = 81.43 + 6.86*np.ceil(Returns['Chargeable Mass']/1000.0)
+
+print Returns[['PNet Charge']].describe()
+print 'Total equivalent charge out PostNet drop-offs ' + str(Returns['PNet Charge'].sum())
+
