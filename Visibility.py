@@ -126,14 +126,14 @@ def iso_to_gregorian(iso_year, iso_week, iso_day):
     year_start = iso_year_start(iso_year)
     return year_start + timedelta(days=iso_day-1, weeks=iso_week-1)
     
-V['GLiso'] = V['GLDate'].apply(lambda x: list(x.isocalendar())[:-1] + [3])
-V['GLgreg'] = V['GLiso'].apply(lambda x: iso_to_gregorian(x[0],x[1],x[2]))
-
 VConf = Visibility.drop_duplicates(subset = ['ConfigSKU','LastQCed'])
 VConf.sort(columns = 'LastQCed', na_position = 'last', inplace = True)
 VConf['duplicate'] = VConf.duplicated(subset = 'POs', take_last = False)
 VConf.loc[VConf['LastQCed'].notnull(), 'atWH'] = 1
 VConf = VConf.drop_duplicates(subset = ['POs','atWH'])
+
+VConf['GLiso'] = VConf['GLDate'].apply(lambda x: list(x.isocalendar())[:-1] + [3])
+VConf['GLgreg'] = VConf['GLiso'].apply(lambda x: iso_to_gregorian(x[0],x[1],x[2]))
 
 GLMonth = VConf.groupby('GLMonth')
 MonthTrack = GLMonth.apply(lambda x : pd.Series(dict(
@@ -288,11 +288,11 @@ workbook = writer4.book
 #format workbook
 title = workbook.add_format({'bold':True, 'size':14})
 header = workbook.add_format({'size':12, 'underline':True, 'font_color':'green'})
-worksheet = writer4.sheets['GLTrack per Buyer']
+worksheet = writer4.sheets['GLperPO per Buyer']
 worksheet.write('A1','Spree Inbound POs to make Go Live Statistics ' + str(today), title)
 worksheet.set_column('A:K', 12 )
 
-ws = writer4.sheets['GLTrack Summary']
+ws = writer4.sheets['GLperPO Summary']
 ws.write('A1','Spree Inbound POs to make Go Live Statistics ' + str(today), title)
 ws.set_column('A:K', 12 )
 writer4.save()
