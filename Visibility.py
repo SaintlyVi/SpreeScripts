@@ -199,9 +199,9 @@ WorkingCapital.name = "Working Capital"
 
 writer3 = ExcelWriter('04_Visibility\\ProductTrack QuickStats ' + str(today) + '.xlsx')
 MonthTrack.to_excel(writer3, 'Sheet1', startrow = 3)
-UnitsCount.to_excel(writer3, 'Sheet1', startrow = 10)
-POC.to_excel(writer3, 'Sheet1', startrow = 17)
-WorkingCapital.to_excel(writer3, 'Sheet1', startrow = 24)
+UnitsCount.to_excel(writer3, 'Sheet1', startrow = 12)
+POC.to_excel(writer3, 'Sheet1', startrow = 21)
+WorkingCapital.to_excel(writer3, 'Sheet1', startrow = 30)
 workbook = writer3.book
 #format workbook
 title = workbook.add_format({'bold':True, 'size':14})
@@ -209,9 +209,9 @@ header = workbook.add_format({'size':12, 'underline':True, 'font_color':'green'}
 worksheet = writer3.sheets['Sheet1']
 worksheet.write('A1','Spree Stock Tracking Statistics ' + str(today), title)
 worksheet.write('A3','Config Count (Number of Configs Planned)', header)
-worksheet.write('A11','Units Count', header)
-worksheet.write('A18','PO Count', header)
-worksheet.write('A25','Working Capital (ZAR loss due to status not achieved)', header)
+worksheet.write('A12','Units Count', header)
+worksheet.write('A21','PO Count', header)
+worksheet.write('A30','Working Capital (ZAR loss due to status not achieved)', header)
 worksheet.set_column('A:A', 8 )
 worksheet.set_column('B:K', 18)
 writer3.save()
@@ -220,17 +220,17 @@ writer3.save()
 wb = load_workbook('04_Visibility\\ProductTrack QuickStats ' + str(today) + '.xlsx')
 ws = wb.worksheets[0]
 
-cellsA = [ws['E4'],ws['E11'],ws['G4'],ws['D18'],ws['C25'],ws['D25']]
+cellsA = [ws['D22'],ws['C31'],ws['D31'],ws['F13']]
 for cell in cellsA:
     cell.style.alignment.wrap_text = True 
     
-cellsB = ws['B20':'F24']
+cellsB = ws['B22':'H29']
 for row in cellsB:
     for cell in row:
         cell.style.number_format.format_code = '0%'
         cell.style.alignment.horizontal = 'center'
 
-cellsC = ws['B27':'F31']
+cellsC = ws['B31':'F38']
 for row in cellsC:
     for cell in row:
         cell.style.number_format.format_code = '"R "#,##0.00'

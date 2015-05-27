@@ -22,7 +22,7 @@ def InboundData(lastmonth, nextmonth, today):
     import pandas as pd
     from pandas import DataFrame
     import gspread
-    import MyFunx    
+    import MyFunx, gdocs    
     
     #==============================================================================
     # Import from all required data sources
@@ -50,8 +50,7 @@ def InboundData(lastmonth, nextmonth, today):
     BP = pd.merge(BPdet, BPreport, on = 'POs', how = 'left', sort = False)
     
     #Import Epping Receiving Report data
-    c = gspread.Client(auth=('spreewarehouse@gmail.com', 'spreeapp'))
-    c.login()
+    c = gdocs.authenticate_gdocs()
     
     sht = c.open('Epping Receiving Report')
     worksheet = sht.worksheet('Booked')

@@ -59,6 +59,8 @@ for d in m['Date']:
     if today.weekday() == 4:
         if d.date() == today + timedelta(3):
             d = d.strftime('%Y/%m/%d')
+        else: 
+            d = 0
     elif d.date() == today + timedelta(1):
             d = d.strftime('%Y/%m/%d')
     else: 
@@ -79,7 +81,10 @@ R2 = R[R['POs'] != ""] #delete rows with no PO information
 R3 = R2[R2['Date'] != 0] #delete rows with date after today
 RowCount = len(R3.index)
 Receiving = R3.set_index([range(0, RowCount, 1)])
-Receiving = Receiving.drop_duplicates(subset = ['POs'])
+Receiving = Receiving.drop_duplicates(subset = ['POs','Brand'])
+Receiving.loc[Receiving.POs.isnull(),'POs'] = "-"
+if len(Receiving.Event.unique()) > 1:
+    Receiving.loc[Receiving.Event == 'Efinity Merchant Delivery','Supplier'] = Receiving.Brand
 
 writer = ExcelWriter('01_Bookings\\Bookings ' + str(today + timedelta(1)) + '.xlsx')
 Receiving.to_excel(writer,'Sheet1', index = False)

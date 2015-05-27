@@ -14,13 +14,12 @@ from pandas import DataFrame
 from datetime import date, timedelta
 import gspread
 from pandas import ExcelWriter
-import MyFunx
+import MyFunx, gdocs
 
-today = date.today() - timedelta(1)
+today = date.today()
 
 #Reading from QCDamages google doc
-c = gspread.Client(auth=('spreewarehouse@gmail.com', 'spreeapp'))
-c.login()
+c = gdocs.authenticate_gdocs()
 
 sht = c.open('QCDamages')
 worksht = sht.worksheet('Sheet1')
@@ -105,12 +104,12 @@ writer.save()
 clean1 = worksht.range('A2:C' + str(lgth + 5))
 for cl in clean1:
     cl.value = ""
-#worksht.update_cells(clean1)
+worksht.update_cells(clean1)
     
 clean2 = ws.range('A2:C' + str(l + 5))
 for cl in clean2:
     cl.value = ""
-#ws.update_cells(clean2)
+ws.update_cells(clean2)
 
 #Email Spree output file 
 doc_name = 'Daily Damages & Oversupply ' 

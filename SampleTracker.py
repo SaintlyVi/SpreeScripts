@@ -10,10 +10,10 @@ from pandas import DataFrame
 from datetime import date, datetime#, timedelta
 import gspread
 from pandas import ExcelWriter
-import MyFunx
+import MyFunx, gdocs
 
-shift = datetime.today().strftime('%Y-%m-%d %H:%M')
-today = date.today()
+shift = '2015-05-25'#datetime.today().strftime('%Y-%m-%d %H:%M')
+today = date.today() - timedelta(3)
 
 #==============================================================================
 # Read Samples Plan master data
@@ -42,8 +42,7 @@ data = pd.ExcelFile('05_Samples\\SampleTrack.xlsx')
 SH = data.parse('Master', header = 0, skiprows = 0, parse_cols = 'E,L:R', parse_dates = True)
 SH.drop_duplicates(subset = ['SKU','01_WHSamples_OUT'], take_last = True, inplace = True)
 
-c = gspread.Client(auth=('spreewarehouse@gmail.com', 'spreeapp'))
-c.login()
+c = gdocs.authenticate_gdocs()
 
 sheets = pd.Series( ['01_WHSamples_OUT','02_SampleRoom_IN','03_SampleRoom_TO_studio','04_SampleRoom_FROM_studio','05_SampleRoom_OUT','06_WHSamples_IN'])
 
