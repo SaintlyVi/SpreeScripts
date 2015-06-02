@@ -26,6 +26,7 @@ worksht = sht.worksheet('Sheet1')
 if worksht.cell(2,1).value == "":
     print "No damages scanned"
     Damaged = DataFrame(columns = ['ProductID', 'Reason for damage', 'QC Responsible','Date', 'Damaged'])
+    dmgs = DataFrame(columns = ['ProductID', 'Reason for damage', 'QC Responsible','Date'])    
     lgth = 0
 else:
     info = worksht.get_all_values()
@@ -116,7 +117,7 @@ doc_name = 'Daily Damages & Oversupply '
 part = '03_Damages_OS\\Damages_OS ' + str(today) + '.xlsx'
 message = 'Daily Damages and Oversupply'
 maillist = 'MailList_Damages.txt'
-MyFunx.send_message(doc_name, message, part, maillist)
+#MyFunx.send_message(doc_name, message, part, maillist)
 
 #Create 8 week rolling damages doc
 dmgs.columns = ['SKU','Reason for damage','QC Responsible','Date'] 

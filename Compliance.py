@@ -56,7 +56,7 @@ SupComp = SupComp.sort(columns = ['GLMonth','NotBooked','NotDelivered','InFull',
 
 SupCompMonth = SupComp[SupComp.GLMonth == today.month - 1]
 
-writerx = ExcelWriter('SupplierCompliance 2015-' + str(today.month - 1) + '.xlsx')
+writerx = ExcelWriter('06_Compliance\\SupplierCompliance 2015-' + str(today.month - 1) + '.xlsx')
 SupCompMonth.to_excel(writerx, 'Last Month', index = False )
 SupComp.to_excel(writerx, 'SupComp', index = False)   
 workbook = writerx.book
@@ -121,7 +121,7 @@ BuCompSum = BuCompSum.sort(columns = ['NotBooked','NotDelivered','InFull','Total
 
 BuCompMonth = BuyerComp[BuyerComp.GLMonth == today.month - 1]
 
-writerx = ExcelWriter('BuyerCompliance 2015-' + str(today.month - 1) + '.xlsx')
+writerx = ExcelWriter('06_Compliance\\BuyerCompliance 2015-' + str(today.month - 1) + '.xlsx')
 BuCompMonth.to_excel(writerx, 'Last Month', index = False)   
 BuyerComp.to_excel(writerx, 'BuyerComp', index = False) 
 BuCompSum.to_excel(writerx, '2015 Summary', index = False)  

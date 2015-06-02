@@ -82,6 +82,8 @@ def data_history( DataName, DocName, DaysCounting, path, sheet = 'Sheet1' ):
     writer = ExcelWriter(filename)
     NewData.to_excel(writer, sheet, index = False)   
     writer.save()
+    
+    NewData.to_csv(os.path.join(path, DocName + '.txt'),sep=';',index=False, encoding = 'utf-8')
 
 def sql_import(table, dateparse, pw):
     # This function pulls data from SQL server    
@@ -119,3 +121,5 @@ def data_total( DocName, HistoryPath, SavePath ):
     writer = ExcelWriter(filename)
     TotalData.to_excel(writer, 'Sheet1', index = False )   
     writer.save()
+    
+    TotalData.to_csv(os.path.join(SavePath, DocName + '.txt'),sep=';',index=False, encoding = 'utf-8')

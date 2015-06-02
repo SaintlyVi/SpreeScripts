@@ -12,9 +12,8 @@ import gspread
 from pandas import ExcelWriter
 import MyFunx, gdocs
 
-shift = '2015-05-25'#datetime.today().strftime('%Y-%m-%d %H:%M')
-today = date.today() - timedelta(3)
-
+shift = datetime.today().strftime('%Y-%m-%d %H:%M')
+today = date.today() 
 #==============================================================================
 # Read Samples Plan master data
 #==============================================================================
@@ -133,3 +132,5 @@ wksht2.set_column('H:K', 10)
 wksht2.set_column('L:L', 18)
 wksht2.set_column('M:R', 28)
 writer2.save()
+
+AllSamples.to_csv('SampleTrack.txt', sep=';',index=False, encoding = 'utf-8')
