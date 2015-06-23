@@ -21,15 +21,15 @@ today = date.today()
 pw = raw_input("Enter SQL Server database password: ")
 Lulu =  MyFunx.sql_import("vw_ProcurementPipeline","ActualGoLiveDate", pw)
 Planned = Lulu[['PlannedGoLiveDayOfWeek','PlannedGoLiveMonth','PlannedGoLiveYear','BuyerPlanName','BuyerPlanStatus','EmployeeFirstName','PlannedUnitCostExclTax','PlannedTotalQuantity','PlannedTotalCostExclTax','SimpleSKU','SimpleName','ConfigName','ConfigSKU','ProcurementStatus','ProcurementProductCategoryL3','ActualGoLiveDate','Supplier','Designer','EANNumber','BarCode']]
-Planned.rename(columns = {'PlannedGoLiveDayOfWeek':'GLDay','PlannedGoLiveMonth':'GLMonth','PlannedGoLiveYear':'GLYear','EmployeeFirstName':'Buyer','SimpleSKU':'ProductID'}, inplace = True)
-Planned.drop_duplicates(subset = ['ProductID','GLMonth'], inplace = True, take_last = True)
+Planned.rename(columns = {'PlannedGoLiveDayOfWeek':'GLDay','PlannedGoLiveMonth':'GLMonth','PlannedGoLiveYear':'GLYear','EmployeeFirstName':'Buyer','ProcurementProductCategoryL3':'Category'}, inplace = True)
+Planned.drop_duplicates(subset = ['SimpleSKU','GLMonth'], inplace = True, take_last = True)
 Planned = Planned[Planned['PlannedTotalCostExclTax'] > 0]
 
-Stock = pd.ExcelFile('Z:\\SUPPLY CHAIN\\Python Scripts\\02_StockCount\\Rolling Stock.xlsx')
-QCed = Stock.parse('Sheet1', skiprows = 0, index = None, parse_cols = (0,1,4), parse_dates = True)
-QCed.rename(columns={'Date': 'Date QCed'}, inplace=True)
+Stock = MyFunx.sql_import("vw_Inventory","Date", pw)
+QCed = Stock[['Date','SimpleSKU','QualityControlGoodQuantity']]
+QCed.rename(columns={'Date': 'Date QCed','QualityControlGoodQuantity':'QC_Count'}, inplace=True)
 
-SamplesPlan = pd.merge(Planned, QCed, on = 'ProductID', how = 'left', sort = False)
+SamplesPlan = pd.merge(Planned, QCed, on = 'SimpleSKU', how = 'left', sort = False)
 SamplesPlan.drop_duplicates(subset = ['ConfigSKU'],take_last = True, inplace = True)
 SamplesPlan = SamplesPlan[(SamplesPlan.GLMonth >= today.month - 2) & (SamplesPlan.GLMonth <= today.month + 2) & (SamplesPlan.GLYear == today.year)]
 
@@ -37,8 +37,6 @@ SamplesPlan = SamplesPlan[(SamplesPlan.GLMonth >= today.month - 2) & (SamplesPla
 # Read data from Google docs
 #==============================================================================
 #History Data
-#data = pd.ExcelFile('05_Samples\\SampleTrack.xlsx')
-#SH = data.parse('Master', header = 0, skiprows = 0, parse_cols = 'E,L:R', parse_dates = True)
 columns = [u'SKU', u'01_WHSamples_OUT', u'02_SampleRoom_IN', u'03_SampleRoom_TO_studio', u'04_SampleRoom_FROM_studio', u'05_SampleRoom_OUT', u'06_WHSamples_IN']
 SH = pd.read_csv('SampleTrack.txt',sep=';', header = 0, usecols = columns, parse_dates = [1,2,3,4,5,6], dayfirst=True)
 SH.drop_duplicates(subset = ['SKU','01_WHSamples_OUT'], take_last = True, inplace = True)
@@ -88,7 +86,7 @@ samples['ConfigSKU'] = samples.SKU.apply(lambda x : x[:7] if len(x)==11 else x)
 AllSamples = pd.merge(SamplesPlan, samples, how = 'outer', on = 'ConfigSKU', sort  = False)
 AllSamples.drop_duplicates(subset = ['ConfigSKU','01_WHSamples_OUT'], take_last = True, inplace = True)
 AllSamples = AllSamples.sort(columns = ['01_WHSamples_OUT'], ascending = True, na_position = 'last')
-AllSamples = AllSamples[['GLDay','GLMonth','GLYear', 'ConfigSKU', 'SKU', 'ConfigName', 'Supplier', 'Designer','Category','Buyer','Date QCed','01_WHSamples_OUT','02_SampleRoom_IN','03_SampleRoom_TO_studio','04_SampleRoom_FROM_studio','05_SampleRoom_OUT','06_WHSamples_IN']]
+AllSamples = AllSamples[['GLDay','GLMonth','GLYear', 'ConfigSKU', 'SKU', 'ConfigName', 'Supplier', 'Designer','Category','Buyer','Date QCed','QC_Count','01_WHSamples_OUT','02_SampleRoom_IN','03_SampleRoom_TO_studio','04_SampleRoom_FROM_studio','05_SampleRoom_OUT','06_WHSamples_IN']]
 
 SampleSummary = AllSamples.groupby(['GLYear','GLMonth']).agg({'Date QCed':'count','01_WHSamples_OUT':'count','02_SampleRoom_IN':'count','03_SampleRoom_TO_studio':'count','04_SampleRoom_FROM_studio':'count','05_SampleRoom_OUT':'count','06_WHSamples_IN':'count'})
 SampleSummary = SampleSummary[['Date QCed','01_WHSamples_OUT','02_SampleRoom_IN','03_SampleRoom_TO_studio','04_SampleRoom_FROM_studio','05_SampleRoom_OUT','06_WHSamples_IN']]
@@ -109,8 +107,8 @@ wksht.set_column('A:B', 10)
 wksht.set_column('C:C', 14)
 wksht.set_column('D:G', 18)
 wksht.set_column('H:K', 10)
-wksht.set_column('L:L', 18)
-wksht.set_column('M:R', 28)
+wksht.set_column('L:M', 18)
+wksht.set_column('N:S', 28)
 wksht = writer.sheets['EasyTrack']
 wksht.set_column('A:C', 8)
 wksht.set_column('D:D', 16)
@@ -121,18 +119,4 @@ MyFunx.send_message(doc_name, message, part, maillist)
     
 #Create SampleTrack Reference doc
     
-#part2 = '05_Samples\\SampleTrack.xlsx'
-     
-#writer2 = ExcelWriter(part2)
-#AllSamples.to_excel(writer2,'Master', index = False)
-#workbook2 = writer2.book
-#wksht2 = writer2.sheets['Master']
-#wksht2.set_column('A:B', 10)
-#wksht2.set_column('C:C', 14)
-#wksht2.set_column('D:G', 18)
-#wksht2.set_column('H:K', 10)
-#wksht2.set_column('L:L', 18)
-#wksht2.set_column('M:R', 28)
-#writer2.save()
-
 AllSamples.to_csv('SampleTrack.txt', sep=';',index=False, encoding = 'utf-8')

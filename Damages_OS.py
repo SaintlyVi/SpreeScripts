@@ -16,7 +16,7 @@ import gspread
 from pandas import ExcelWriter
 import MyFunx, gdocs
 
-today = date.today()
+today = date.today() 
 
 #Reading from QCDamages google doc
 c = gdocs.authenticate_gdocs()
@@ -117,7 +117,7 @@ doc_name = 'Daily Damages & Oversupply '
 part = '03_Damages_OS\\Damages_OS ' + str(today) + '.xlsx'
 message = 'Daily Damages and Oversupply'
 maillist = 'MailList_Damages.txt'
-#MyFunx.send_message(doc_name, message, part, maillist)
+MyFunx.send_message(doc_name, message, part, maillist)
 
 #Create 8 week rolling damages doc
 dmgs.columns = ['SKU','Reason for damage','QC Responsible','Date'] 
