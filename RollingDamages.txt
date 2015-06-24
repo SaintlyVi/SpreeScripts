@@ -1,19 +1,60 @@
 Date;Order ID;SKU;Reason for damage;QC Responsible
-2015-06-23;363476;94MZ3680044;Dirt Stain;Santhi
-2015-06-23;324660;696Q4780048;Fabric Quality/Tear, Flaw, Peeling off;Latifah
-2015-06-23;288208;696Q4780048;Fabric Quality/Tear, Flaw, Peeling off;Latifah
-2015-06-23;277102;696Q4780048;Fabric Quality/Tear, Flaw, Peeling off;Latifah
-2015-06-23;324660;696Q4780044;Fabric Quality/Tear, Flaw, Peeling off;Noluthando
-2015-06-23;288208;696Q4780044;Fabric Quality/Tear, Flaw, Peeling off;Noluthando
-2015-06-23;277102;696Q4780044;Fabric Quality/Tear, Flaw, Peeling off;Noluthando
-2015-06-23;324660;696Q4780044;Dirt Stain;Charmaine
-2015-06-23;288208;696Q4780044;Dirt Stain;Charmaine
-2015-06-23;277102;696Q4780044;Dirt Stain;Charmaine
-2015-06-23;334035;696Q4780040;Fabric Quality/Tear, Flaw, Peeling off;Latifah
-2015-06-23;324660;696Q4780040;Fabric Quality/Tear, Flaw, Peeling off;Latifah
-2015-06-23;288208;696Q4780040;Fabric Quality/Tear, Flaw, Peeling off;Latifah
-2015-06-23;277102;696Q4780040;Fabric Quality/Tear, Flaw, Peeling off;Latifah
-2015-06-23;334035;696Q4780040;Dirt Stain;Latifah
-2015-06-23;324660;696Q4780040;Dirt Stain;Latifah
-2015-06-23;288208;696Q4780040;Dirt Stain;Latifah
-2015-06-23;277102;696Q4780040;Dirt Stain;Latifah
+2015-06-24;354450;LEP97U2000M;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;LEP97U2000M;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;LEP97U2000L;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;LEP97U2000S;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;LEP97U200XL;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;LEP97U2000M;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;LEP97U2000M;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;LEP97U2000L;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;LEP97U2000S;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;LEP97U2000M;Fabric Quality;Mandy
+2015-06-24;354450;LEP97U2000L;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;LEP97U2000L;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;878KE3M000L;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;878KE3M000L;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;878KE3M000L;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;878KE3M00XL;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;878KE3M000L;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;878KE3M000M;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;878KE3M000L;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;878KE3M00XL;Fabric Quality/Tear, Flaw, Peeling off;Caroline
+2015-06-24;354450;878KE3M000M;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;J65T23V00XL;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;J65T23V000L;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;J65T23V000M;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;J65T23V000S;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;J65T23V000L;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;J65T23V000M;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;354450;J65T23V000L;Fabric Quality;Caroline
+2015-06-24;354450;J65T23V000M;Poor Product Constuction/ Bad Fit;Caroline
+2015-06-24;339557;9A4E56E0006;Missing Trim;Latifah
+2015-06-24;339566;6HB9Y8T0006;Missing trim;Simone
+2015-06-24;339566;6HB9Y8T0005;Missing trim;Simone
+2015-06-24;339566;6HB9Y8T0005;Missing trim;Simone
+2015-06-24;339566;99CYB350004;Poor Product Constuction/ Bad Fit/Scratch;Santhi
+2015-06-24;364365;9S77WB1000M;Dirt Stain;Charmaine
+2015-06-24;364365;9S77WB100XL;Dirt Stain;Charmaine
+2015-06-24;328585;3XE2XH60038;Dirt Stain;Charmaine
+2015-06-24;328585;3XE2XH60038;Dirt Stain;Bongie
+2015-06-24;328585;3XE2XH60034;Dirt Stain;Charmaine
+2015-06-24;328585;3XE2XH60036;Dirt Stain;Latifah
+2015-06-24;328585;3XE2XH60038;Dirt Stain;Bongie
+2015-06-24;328585;ZC6O45T0034;Dirt Stain;Charmaine
+2015-06-24;348331;5MSZBA900NA;Broken Item/ Chipped/ Scratched;Latifah
+2015-06-24;328585;75EVHR60038;Dirt Stain;Bongie
+2015-06-24;328585;ZC6O45T0036;Dirt Stain;Bongie
+2015-06-24;328585;ZC6O45T0038;Dirt Stain;Maya
+2015-06-24;328585;ZC6O45T0036;Dirt Stain;Bongie
+2015-06-24;328585;75EVHR60034;Dirt Stain;Charmaine
+2015-06-24;328585;75EVHR60036;Dirt Stain;Bongie
+2015-06-24;328585;75EVHR60038;Dirt Stain;Bongie
+2015-06-24;328585;75EVHR60038;Dirt Stain;Bongie
+2015-06-24;328585;ZC6O45T0036;Dirt Stain;Bongie
+2015-06-24;328585;3XE2XH60032;Dirt Stain;Noluthando
+2015-06-24;328585;3XE2XH60032;Dirt Stain;Noluthando
+2015-06-24;328585;3XE2XH60034;Dirt Stain;Charmaine
+2015-06-24;345938;U445M9UOSFA;Dirt Stain;Christo
+2015-06-24;345938;98Z51M3OSFA;Broken Mechanism/Flat Battery;Simone
+2015-06-24;345938;7E76229OSFA;Broken Mechanism/Flat Battery;Noluthando
+2015-06-24;345938;98Z51M3OSFA;Missing Trim;Simone
