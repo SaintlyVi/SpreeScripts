@@ -8,7 +8,6 @@ Created on Tue Feb 10 11:12:34 2015
 import pandas as pd
 from pandas import DataFrame
 from datetime import date, datetime, timedelta
-import gspread
 from pandas import ExcelWriter
 import MyFunx, gdocs
 
@@ -18,7 +17,7 @@ today = date.today()
 # Read Samples Plan master data
 #==============================================================================
 
-pw = raw_input("Enter SQL Server database password: ")
+pw = 'Spr33Pops101'
 Lulu =  MyFunx.sql_import("vw_ProcurementPipeline","ActualGoLiveDate", pw)
 Planned = Lulu[['PlannedGoLiveDayOfWeek','PlannedGoLiveMonth','PlannedGoLiveYear','BuyerPlanName','BuyerPlanStatus','EmployeeFirstName','PlannedUnitCostExclTax','PlannedTotalQuantity','PlannedTotalCostExclTax','SimpleSKU','SimpleName','ConfigName','ConfigSKU','ProcurementStatus','ProcurementProductCategoryL3','ActualGoLiveDate','Supplier','Designer','EANNumber','BarCode']]
 Planned.rename(columns = {'PlannedGoLiveDayOfWeek':'GLDay','PlannedGoLiveMonth':'GLMonth','PlannedGoLiveYear':'GLYear','EmployeeFirstName':'Buyer','ProcurementProductCategoryL3':'Category'}, inplace = True)

@@ -140,4 +140,5 @@ DocName = 'Rolling Oversupply'
 DaysCounting = 56
 MyFunx.data_history( DataName, DocName, DaysCounting, path, sheet )
 
-
+Oversup.to_csv('RollingOversupply.txt', sep=';',index=False, encoding = 'utf-8')
+dmgmrg.to_csv('RollingDamages.txt', sep=';',index=False, encoding = 'utf-8')

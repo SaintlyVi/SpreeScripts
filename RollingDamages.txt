@@ -1,0 +1,19 @@
+Date;Order ID;SKU;Reason for damage;QC Responsible
+2015-06-23;363476;94MZ3680044;Dirt Stain;Santhi
+2015-06-23;324660;696Q4780048;Fabric Quality/Tear, Flaw, Peeling off;Latifah
+2015-06-23;288208;696Q4780048;Fabric Quality/Tear, Flaw, Peeling off;Latifah
+2015-06-23;277102;696Q4780048;Fabric Quality/Tear, Flaw, Peeling off;Latifah
+2015-06-23;324660;696Q4780044;Fabric Quality/Tear, Flaw, Peeling off;Noluthando
+2015-06-23;288208;696Q4780044;Fabric Quality/Tear, Flaw, Peeling off;Noluthando
+2015-06-23;277102;696Q4780044;Fabric Quality/Tear, Flaw, Peeling off;Noluthando
+2015-06-23;324660;696Q4780044;Dirt Stain;Charmaine
+2015-06-23;288208;696Q4780044;Dirt Stain;Charmaine
+2015-06-23;277102;696Q4780044;Dirt Stain;Charmaine
+2015-06-23;334035;696Q4780040;Fabric Quality/Tear, Flaw, Peeling off;Latifah
+2015-06-23;324660;696Q4780040;Fabric Quality/Tear, Flaw, Peeling off;Latifah
+2015-06-23;288208;696Q4780040;Fabric Quality/Tear, Flaw, Peeling off;Latifah
+2015-06-23;277102;696Q4780040;Fabric Quality/Tear, Flaw, Peeling off;Latifah
+2015-06-23;334035;696Q4780040;Dirt Stain;Latifah
+2015-06-23;324660;696Q4780040;Dirt Stain;Latifah
+2015-06-23;288208;696Q4780040;Dirt Stain;Latifah
+2015-06-23;277102;696Q4780040;Dirt Stain;Latifah
