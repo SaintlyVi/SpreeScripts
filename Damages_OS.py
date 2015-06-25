@@ -12,7 +12,6 @@ Created on Fri Nov 21 14:40:29 2014
 import pandas as pd
 from pandas import DataFrame
 from datetime import date, timedelta
-import gspread
 from pandas import ExcelWriter
 import MyFunx, gdocs
 
@@ -60,7 +59,7 @@ else:
         
 #Import Brightpearl Detail Report
 columns = ["Order ID", "Contact", "SKU", "Name"]
-BPdetail = pd.read_csv('BPdetail.csv', header = 0, usecols = columns, dtype = {'Order ID': unicode})
+BPdetail = pd.read_csv('BPdetail.txt', header = 0, usecols = columns, dtype = {'Order ID': unicode})
 
 #Import Supplier Contacts
 Contacts = pd.ExcelFile('03_Damages_OS\\Supplier Contacts.xlsx')
@@ -119,26 +118,13 @@ message = 'Daily Damages and Oversupply'
 maillist = 'MailList_Damages.txt'
 MyFunx.send_message(doc_name, message, part, maillist)
 
-#Create 8 week rolling damages doc
+#Create rolling damages doc
 dmgs.columns = ['SKU','Reason for damage','QC Responsible','Date'] 
 dmgmrg = pd.merge(dmgs, BPdetail, on='SKU', how = 'left')
 dmgmrg = dmgmrg[['Date','Order ID','SKU','Reason for damage','QC Responsible']]
-path = '03_Damages_OS'    
-DataName = dmgmrg
-DocName = 'Rolling Damages'
-DaysCounting = 56
-sheet = 'Sheet1'
-MyFunx.data_history( DataName, DocName, DaysCounting, path, sheet )
+dmgmrg.to_csv('RollingDamages.txt', sep=';',index=False, encoding = 'utf-8')
 
-#Create 8 week rolling oversupply doc
+#Create rolling oversupply doc
 Oversup = DayCount[["Date","Supplier","PO","SKU","Oversupply"]]
 Oversup = Oversup[Oversup.Oversupply.isnull() == False]
-path = '03_Damages_OS'    
-DataName = Oversup
-sheet = 'Sheet1'
-DocName = 'Rolling Oversupply'
-DaysCounting = 56
-MyFunx.data_history( DataName, DocName, DaysCounting, path, sheet )
-
 Oversup.to_csv('RollingOversupply.txt', sep=';',index=False, encoding = 'utf-8')
-dmgmrg.to_csv('RollingDamages.txt', sep=';',index=False, encoding = 'utf-8')

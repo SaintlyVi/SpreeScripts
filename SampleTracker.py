@@ -5,6 +5,8 @@ Created on Tue Feb 10 11:12:34 2015
 @author: Wiebke.Toussaint
 """
 
+#This script keeps an audit trail of samples sent from WH to Sample Room, Studio and back to WH
+
 import pandas as pd
 from pandas import DataFrame
 from datetime import date, datetime, timedelta

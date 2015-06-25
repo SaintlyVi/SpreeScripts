@@ -6,9 +6,7 @@ Created on Tue Nov 11 11:54:13 2014
 @author: Wiebke.Toussaint
 """
 
-## This script takes bookings from Simplybook, createst the next day's Receiving Report and emails
-## it to buyers and warehouse. All suppliers' contact information is recorded in a 6 week rolling 
-## doc
+## This script takes bookings from Simplybook, createst the next day's Receiving Report and emails it to buyers and warehouse. All suppliers' contact information is recorded in a 6 week rolling doc
 
 import pandas as pd
 from pandas import DataFrame, Series

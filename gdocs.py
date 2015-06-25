@@ -5,6 +5,8 @@ Created on Wed May 27 16:05:32 2015
 @author: Wiebke.Toussaint
 """
 
+#pip install oauth2client, use spreewarehouse@gmail.com password
+
 import requests, gspread, os, ast
 from oauth2client.client import SignedJwtAssertionCredentials
 

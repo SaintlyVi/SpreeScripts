@@ -5,7 +5,7 @@ Created on Fri Nov 21 14:40:29 2014
 
 @author: Wiebke.Toussaint
 """
-
+#NEW Damages script to be used until efinity supplier communications are automated.
 #This script reads all damaged stock processed by Spree QC teams. 
 #Script must be scheduled to run on a daily basis at 23:45.
 
@@ -102,13 +102,13 @@ message = 'Daily Damages and Oversupply'
 maillist = 'MailList_Damages.txt'
 MyFunx.send_message(doc_name, message, part, maillist)
 
-#Create 8 week rolling damages doc
+#Create rolling damages doc
 Damages.columns = ['SimpleSKU','Reason for damage','QC Responsible','Date'] 
 dmgmrg = pd.merge(Damages, PODetail, on='SimpleSKU', how = 'left')
 dmgmrg = dmgmrg[['Date','PurchaseOrderNumber','SimpleSKU','Reason for damage','QC Responsible']]
 dmgmrg.to_csv('RollingDamages.txt', sep=';',index=False, encoding = 'utf-8')
 
-#Create 8 week rolling oversupply doc
+#Create rolling oversupply doc
 Oversup = DayCount[["Date","SupplierName","PO","SimpleSKU","Oversupply"]]
 Oversup = Oversup[Oversup.Oversupply.isnull() == False]
 Oversup.to_csv('RollingOversupply.txt', sep=';',index=False, encoding = 'utf-8')

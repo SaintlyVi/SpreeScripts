@@ -5,12 +5,14 @@ Created on Wed Jun 10 12:40:46 2015
 @author: Wiebke.Toussaint
 """
 
+#This script access Spree's Simplybook account via the API
+## Unfortunately not possible to retrieve individual booking information via the API, so script is not of much use
+
 import requests
 import json
 import pandas as pd
 
-#Create access token
-
+#Create access token (used to create headers) with requests.post() command
 def getToken():
     API_KEY = '3b52bf40044d75d52b257a1c41a2706947d3c4fcf561a258028a63b7f8d284d4'
     COMPANY_LOGIN = 'Spree'
@@ -22,7 +24,7 @@ def getToken():
     r = requests.post(url, json = {"jsonrpc":"2.0","method":"getToken","params":[COMPANY_LOGIN,API_KEY],"id":1}, headers = headers)
     return(r.json()['result'])
     
-#Create headers
+#Create headers (used to fetch content)
 def createHeaders():
     headers = {
     'Content-Length': '60',
@@ -32,7 +34,7 @@ def createHeaders():
     'Accept': 'application/json'}
     return headers
 
-#Fetch data from simplybook
+#Fetch data from simplybook using headers with requests.post() command
 url = 'https://user-api.simplybook.me/'
 getReservedTime = requests.post(url, json = {"jsonrpc":"2.0","method":"getReservedTime","params":['2015-06-01','2015-06-10','1','1'],"id":1}, headers = createHeaders())
 
