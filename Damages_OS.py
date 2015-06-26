@@ -59,7 +59,7 @@ else:
         
 #Import Brightpearl Detail Report
 columns = ["Order ID", "Contact", "SKU", "Name"]
-BPdetail = pd.read_csv('BPdetail.txt', header = 0, usecols = columns, dtype = {'Order ID': unicode})
+BPdetail = pd.read_csv('BPdetail.csv', header = 0, usecols = columns, dtype = {'Order ID': unicode})
 
 #Import Supplier Contacts
 Contacts = pd.ExcelFile('03_Damages_OS\\Supplier Contacts.xlsx')
